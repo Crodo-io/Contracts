@@ -96,6 +96,10 @@ contract CRDStake is AccessControl, ReentrancyGuard {
         return userMap[_staker].stakeAmount;
     }
 
+    function getLockTime(address _staker) external view returns (uint48 lockTime) {
+        return userMap[_staker].lockTime;
+    }
+
     // redundant with stakeAmount() for compatibility
     function balanceOf(address _staker) external view returns (uint256 balance) {
         return userMap[_staker].stakeAmount;
@@ -200,6 +204,10 @@ contract CRDStake is AccessControl, ReentrancyGuard {
 
     function stakeAmount_msgSender() public view returns (uint256) {
         return userMap[msg.sender].stakeAmount;
+    }
+    
+    function stakeLockTime_msgSender() external view returns (uint48) {
+        return userMap[msg.sender].lockTime;
     }
 
     function stakeTime_msgSender() external view returns (uint48) {
@@ -316,6 +324,8 @@ contract CRDStake is AccessControl, ReentrancyGuard {
         require(_lockTime >= lockTimePeriodMin, "lockTime must by > lockTimePeriodMin");
 
         User storage user = _updateRewards(msg.sender); // update rewards and return reference to user
+
+        require(block.timestamp + _lockTime >= user.unlockTime, "locktime must be >= current lock time");
 
         user.stakeAmount = toUint160(user.stakeAmount + _amount);
         tokenTotalStaked += _amount;
