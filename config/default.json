@@ -1,0 +1,20 @@
+{
+    "testnet": {
+        "blockchain": {
+            "rpc": "https://cronos-testnet-3.crypto.org",
+            "networkId": "*"
+        },
+        "truffle": {
+            "privateKey": ""
+        }
+    },
+    "mainnet": {
+        "blockchain": {
+            "rpc": "https://rpc-cronos.crypto.org/",
+            "networkId": "*"
+        },
+        "truffle": {
+            "privateKey": ""
+        }
+    }
+}

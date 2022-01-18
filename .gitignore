@@ -1,0 +1,18 @@
+# build
+build/
+
+# dependencies
+node_modules/
+
+#test
+.coverage/
+.coverage-contracts/
+coverage/
+coverage.json
+
+# ide
+.idea/
+.vscode/
+
+#deploy
+Flattened.sol
