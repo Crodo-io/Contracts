@@ -10,13 +10,13 @@
     "coverage": "truffle run coverage",
     "build": "truffle compile",
     "test": "truffle test",
-    "truffle": "truffle",
-    "flatten": "bash ./scripts/flatten.sh"
+    "truffle": "truffle"
   },
   "dependencies": {
     "@openzeppelin/contracts": "^4.4.2",
     "@truffle/hdwallet-provider": "^2.0.0",
     "config": "^3.3.7",
+    "solium": "^1.2.5",
     "truffle": "^5.4.29"
   },
   "keywords": [],

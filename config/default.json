@@ -1,4 +1,13 @@
 {
+    "development": {
+        "blockchain": {
+            "rpc": "http://127.0.0.1:8545",
+            "networkId": "*"
+        },
+        "truffle": {
+            "mnemonic": ""
+        }
+    },
     "testnet": {
         "blockchain": {
             "rpc": "https://cronos-testnet-3.crypto.org",

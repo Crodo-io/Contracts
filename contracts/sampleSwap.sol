@@ -1,278 +1,10 @@
-/**
- *Submitted for verification at Etherscan.io on 2021-02-15
-*/
-
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-/**
- * @title ERC20Basic
- * @dev Simpler version of ERC20 interface
- * @dev see https://github.com/ethereum/EIPs/issues/179
- */
-contract ERC20Basic {
-    function decimals() public view returns (uint8);
-    function totalSupply() public view returns (uint256);
-    function balanceOf(address who) public view returns (uint256);
-    function transfer(address to, uint256 value) public returns (bool);
-    event Transfer(address indexed from, address indexed to, uint256 value);
-}
-
-/**
- * @dev Wrappers over Solidity's arithmetic operations with added overflow
- * checks.
- *
- * Arithmetic operations in Solidity wrap on overflow. This can easily result
- * in bugs, because programmers usually assume that an overflow raises an
- * error, which is the standard behavior in high level programming languages.
- * `SafeMath` restores this intuition by reverting the transaction when an
- * operation overflows.
- *
- * Using this library instead of the unchecked operations eliminates an entire
- * class of bugs, so it's recommended to use it always.
- */
-library SafeMath {
-    /**
-     * @dev Returns the addition of two unsigned integers, reverting on
-     * overflow.
-     *
-     * Counterpart to Solidity's `+` operator.
-     *
-     * Requirements:
-     * - Addition cannot overflow.
-     */
-    function add(uint256 a, uint256 b) internal pure returns (uint256) {
-        uint256 c = a + b;
-        require(c >= a, "SafeMath: addition overflow");
-
-        return c;
-    }
-
-    /**
-     * @dev Returns the subtraction of two unsigned integers, reverting on
-     * overflow (when the result is negative).
-     *
-     * Counterpart to Solidity's `-` operator.
-     *
-     * Requirements:
-     * - Subtraction cannot overflow.
-     */
-    function sub(uint256 a, uint256 b) internal pure returns (uint256) {
-        return sub(a, b, "SafeMath: subtraction overflow");
-    }
-
-    /**
-     * @dev Returns the subtraction of two unsigned integers, reverting with custom message on
-     * overflow (when the result is negative).
-     *
-     * Counterpart to Solidity's `-` operator.
-     *
-     * Requirements:
-     * - Subtraction cannot overflow.
-     *
-     * _Available since v2.4.0._
-     */
-    function sub(uint256 a, uint256 b, string memory errorMessage) internal pure returns (uint256) {
-        require(b <= a, errorMessage);
-        uint256 c = a - b;
-
-        return c;
-    }
-
-    /**
-     * @dev Returns the multiplication of two unsigned integers, reverting on
-     * overflow.
-     *
-     * Counterpart to Solidity's `*` operator.
-     *
-     * Requirements:
-     * - Multiplication cannot overflow.
-     */
-    function mul(uint256 a, uint256 b) internal pure returns (uint256) {
-        // Gas optimization: this is cheaper than requiring 'a' not being zero, but the
-        // benefit is lost if 'b' is also tested.
-        // See: https://github.com/OpenZeppelin/openzeppelin-contracts/pull/522
-        if (a == 0) {
-            return 0;
-        }
-
-        uint256 c = a * b;
-        require(c / a == b, "SafeMath: multiplication overflow");
-
-        return c;
-    }
-
-    /**
-     * @dev Returns the integer division of two unsigned integers. Reverts on
-     * division by zero. The result is rounded towards zero.
-     *
-     * Counterpart to Solidity's `/` operator. Note: this function uses a
-     * `revert` opcode (which leaves remaining gas untouched) while Solidity
-     * uses an invalid opcode to revert (consuming all remaining gas).
-     *
-     * Requirements:
-     * - The divisor cannot be zero.
-     */
-    function div(uint256 a, uint256 b) internal pure returns (uint256) {
-        return div(a, b, "SafeMath: division by zero");
-    }
-
-    /**
-     * @dev Returns the integer division of two unsigned integers. Reverts with custom message on
-     * division by zero. The result is rounded towards zero.
-     *
-     * Counterpart to Solidity's `/` operator. Note: this function uses a
-     * `revert` opcode (which leaves remaining gas untouched) while Solidity
-     * uses an invalid opcode to revert (consuming all remaining gas).
-     *
-     * Requirements:
-     * - The divisor cannot be zero.
-     *
-     * _Available since v2.4.0._
-     */
-    function div(uint256 a, uint256 b, string memory errorMessage) internal pure returns (uint256) {
-        // Solidity only automatically asserts when dividing by 0
-        require(b > 0, errorMessage);
-        uint256 c = a / b;
-        // assert(a == b * c + a % b); // There is no case in which this doesn't hold
-
-        return c;
-    }
-
-    /**
-     * @dev Returns the remainder of dividing two unsigned integers. (unsigned integer modulo),
-     * Reverts when dividing by zero.
-     *
-     * Counterpart to Solidity's `%` operator. This function uses a `revert`
-     * opcode (which leaves remaining gas untouched) while Solidity uses an
-     * invalid opcode to revert (consuming all remaining gas).
-     *
-     * Requirements:
-     * - The divisor cannot be zero.
-     */
-    function mod(uint256 a, uint256 b) internal pure returns (uint256) {
-        return mod(a, b, "SafeMath: modulo by zero");
-    }
-
-    /**
-     * @dev Returns the remainder of dividing two unsigned integers. (unsigned integer modulo),
-     * Reverts with custom message when dividing by zero.
-     *
-     * Counterpart to Solidity's `%` operator. This function uses a `revert`
-     * opcode (which leaves remaining gas untouched) while Solidity uses an
-     * invalid opcode to revert (consuming all remaining gas).
-     *
-     * Requirements:
-     * - The divisor cannot be zero.
-     *
-     * _Available since v2.4.0._
-     */
-    function mod(uint256 a, uint256 b, string memory errorMessage) internal pure returns (uint256) {
-        require(b != 0, errorMessage);
-        return a % b;
-    }
-}
-
-// File: openzeppelin-solidity/contracts/token/ERC20/ERC20.sol
-
-/**
- * @title ERC20 interface
- * @dev see https://github.com/ethereum/EIPs/issues/20
- */
-contract ERC20 is ERC20Basic {
-  function allowance(address owner, address spender) public view returns (uint256);
-  function transferFrom(address from, address to, uint256 value) public returns (bool);
-  function approve(address spender, uint256 value) public returns (bool);
-  event Approval(address indexed owner, address indexed spender, uint256 value);
-}
-
-// File: openzeppelin-solidity/contracts/ownership/Ownable.sol
-
-/**
- * @title Ownable
- * @dev The Ownable contract has an owner address, and provides basic authorization control
- * functions, this simplifies the implementation of "user permissions".
- */
-contract Ownable {
-    address public owner;
-    address public proposedOwner;
-    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
-
-
-    /**
-    * @dev The Ownable constructor sets the original `owner` of the contract to the sender
-    * account.
-    */
-    constructor() public {
-        owner = msg.sender;
-    }
-
-    /**
-    * @dev Throws if called by any account other than the owner.
-    */
-    modifier onlyOwner() {
-        require(msg.sender == owner, "Has to be owner");
-        _;
-    }
-
-    function transferOwnership(address _proposedOwner) public onlyOwner {
-        require(msg.sender != _proposedOwner, "Has to be diff than current owner");
-        proposedOwner = _proposedOwner;
-    }
-
-    function claimOwnership() public {
-        require(msg.sender == proposedOwner, "Has to be the proposed owner");
-        emit OwnershipTransferred(owner, proposedOwner);
-        owner = proposedOwner;
-        proposedOwner = address(0);
-    }
-}
-
-// File: openzeppelin-solidity/contracts/lifecycle/Pausable.sol
-
-/**
- * @title Pausable
- * @dev Base contract which allows children to implement an emergency stop mechanism.
- */
-contract Pausable is Ownable {
-    event Pause();
-    event Unpause();
-
-    bool public paused = false;
-
-
-    /**
-    * @dev Modifier to make a function callable only when the contract is not paused.
-    */
-    modifier whenNotPaused() {
-        require(!paused, "Has to be unpaused");
-        _;
-    }
-
-    /**
-    * @dev Modifier to make a function callable only when the contract is paused.
-    */
-    modifier whenPaused() {
-        require(paused, "Has to be paused");
-        _;
-    }
-
-    /**
-    * @dev called by the owner to pause, triggers stopped state
-    */
-    function pause() onlyOwner whenNotPaused public {
-        paused = true;
-        emit Pause();
-    }
-
-    /**
-    * @dev called by the owner to unpause, returns to normal state
-    */
-    function unpause() onlyOwner whenPaused public {
-        paused = false;
-        emit Unpause();
-    }
-}
-
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/security/Pausable.sol";
 
 contract Whitelist is Ownable {
 
@@ -290,7 +22,7 @@ contract Whitelist is Ownable {
         _;
     }
 
-    constructor (bool _hasWhitelisting) public{
+    constructor (bool _hasWhitelisting) public {
         hasWhitelisting = _hasWhitelisting;
     }
 
@@ -341,7 +73,7 @@ contract FixedSwap is Pausable, Whitelist {
     uint256 public tokensAllocated = 0; /* Tokens Available for Allocation - Dynamic */
     uint256 public tokensForSale = 0; /* Tokens Available for Sale */
     bool    public isTokenSwapAtomic; /* Make token release atomic or not */
-    address payable public FEE_ADDRESS = 0xAEb39b67F27b641Ef9F95fB74F1A46b1EE4Efc83; /* Default Address for Fee Percentage */
+    address payable public FEE_ADDRESS = payable(0xAEb39b67F27b641Ef9F95fB74F1A46b1EE4Efc83); /* Default Address for Fee Percentage */
     uint256 public feePercentage = 1; /* Default Fee 1% */
 
     struct Purchase {
@@ -585,14 +317,16 @@ contract FixedSwap is Pausable, Whitelist {
         require(isBuyer(purchase_id), "Address is not buyer");
         purchases[purchase_id].wasFinalized = true;
         purchases[purchase_id].reverted = true;
-        msg.sender.transfer(purchases[purchase_id].ethAmount);
+        address payable seller = payable(msg.sender);
+        seller.transfer(purchases[purchase_id].ethAmount);
     }
 
     /* Admin Functions */
     function withdrawFunds() external onlyOwner whenNotPaused isSaleFinalized {
         require(minimumRaiseAchieved(), "Minimum raise has to be reached");
         FEE_ADDRESS.transfer(address(this).balance.mul(feePercentage).div(100)); /* Fee Address */
-        msg.sender.transfer(address(this).balance);
+        address payable seller = payable(msg.sender);
+        seller.transfer(address(this).balance);
     }
 
     function withdrawUnsoldTokens() external onlyOwner isSaleFinalized {
@@ -620,7 +354,8 @@ contract FixedSwap is Pausable, Whitelist {
 
     /* Safe Pull function */
     function safePull() payable external onlyOwner whenPaused {
-        msg.sender.transfer(address(this).balance);
+        address payable seller = payable(msg.sender);
+        seller.transfer(address(this).balance);
         erc20.transfer(msg.sender, erc20.balanceOf(address(this)));
     }
 }

@@ -5,6 +5,13 @@ const config = require('config')
 module.exports = {
     networks: {
         development: {
+            provider: function() {
+                let w = new HDWalletProvider({
+                    mnemonic: config.get("development.truffle.mnemonic"),
+                    providerOrUrl: config.get("development.blockchain.rpc"),
+                })
+                return w
+            },
             host: "127.0.0.1",     // Localhost (default: none)
             port: 8545,            // Standard Ethereum port (default: none)
             network_id: "*",       // Any network (default: none)
