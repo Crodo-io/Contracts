@@ -4,11 +4,14 @@
   "description": "Smart contracts for Crodo-io project",
   "main": "index.js",
   "scripts": {
-    "lint": "npm run eslint && npm run solium",
-    "eslint": "eslint test/",
-    "solium": "solium --dir contracts",
-    "coverage": "truffle run coverage",
     "build": "truffle compile",
+    "deploy": "truffle deploy --reset",
+    "deploy:testnet": "truffle deploy --network testnet --reset",
+    "deploy:mainnet": "truffle deploy --network mainnet --reset",
+    "coverage": "truffle run coverage",
+    "eslint": "eslint test/",
+    "lint": "npm run eslint && npm run solium",
+    "solium": "solium --dir contracts",
     "test": "truffle test",
     "truffle": "truffle"
   },
