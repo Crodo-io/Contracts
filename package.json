@@ -1,0 +1,28 @@
+{
+  "name": "Contracts",
+  "version": "1.0.0",
+  "description": "Smart contracts for Crodo-io project",
+  "main": "index.js",
+  "scripts": {
+    "build": "truffle compile",
+    "deploy": "truffle deploy --reset",
+    "deploy:testnet": "truffle deploy --network testnet --reset",
+    "deploy:mainnet": "truffle deploy --network mainnet --reset",
+    "coverage": "truffle run coverage",
+    "eslint": "eslint test/",
+    "lint": "npm run eslint && npm run solium",
+    "solium": "solium --dir contracts",
+    "test": "truffle test",
+    "truffle": "truffle"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^4.4.2",
+    "@truffle/hdwallet-provider": "^2.0.0",
+    "config": "^3.3.7",
+    "solium": "^1.2.5",
+    "truffle": "^5.4.29"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
