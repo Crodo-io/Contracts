@@ -2,12 +2,9 @@
 
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Capped.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Pausable.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/security/Pausable.sol";
 
 contract CrodoToken is ERC20, ERC20Pausable, ERC20Capped {
     string private _name = "CrodoToken";
@@ -17,7 +14,10 @@ contract CrodoToken is ERC20, ERC20Pausable, ERC20Capped {
     // 100 Million <---------|   |-----------------> 10^18
     uint256 constant TOTAL_CAP = 100000000 * 1 ether;
 
-    constructor(address _distributionContract) ERC20Capped(TOTAL_CAP) ERC20(_name, _symbol) {
+    constructor(address _distributionContract)
+        ERC20Capped(TOTAL_CAP)
+        ERC20(_name, _symbol)
+    {
         distributionContractAddress = _distributionContract;
     }
 
@@ -25,8 +25,16 @@ contract CrodoToken is ERC20, ERC20Pausable, ERC20Capped {
         _mint(account, amount);
     }
 
-    function _mint(address account, uint256 amount) internal virtual override(ERC20, ERC20Capped) {
-        ERC20._mint(account, amount);
+    function _mint(address account, uint256 amount)
+        internal
+        virtual
+        override(ERC20, ERC20Capped)
+    {
+        // require(
+        //     account == distributionContractAddress,
+        //     "Only distribution contract can mint Crodo tokens"
+        // );
+        ERC20Capped._mint(account, amount);
     }
 
     function _beforeTokenTransfer(

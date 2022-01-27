@@ -10,13 +10,12 @@ import "@openzeppelin/contracts/security/Pausable.sol";
 contract CrodoDistributionContract is Pausable, Ownable {
     using SafeMath for uint256;
 
-    uint256 constant public decimals = 1 ether;
-    address[] public tokenOwners ; /* Tracks distributions mapping (iterable) */
+    uint256 public constant decimals = 1 ether;
+    address[] public tokenOwners; /* Tracks distributions mapping (iterable) */
     uint256 public TGEDate = 0; /* Date From where the distribution starts (TGE) */
-    uint256 constant public month = 30 days;
-    uint256 constant public year = 365 days;
+    uint256 public constant month = 30 days;
+    uint256 public constant year = 365 days;
     uint256 public lastDateDistribution = 0;
-
 
     mapping(address => DistributionStep[]) public distributions; /* Distribution object */
 
@@ -29,22 +28,60 @@ contract CrodoDistributionContract is Pausable, Ownable {
         uint256 amountSent;
     }
 
-    constructor() public{
-
+    constructor() public {
         /* Seed */
-        setInitialDistribution(0xA4399b7C8a6790c0c9174a68f512D10A791664e1, 3000000, 0 /* No Lock */);
-        setInitialDistribution(0xA4399b7C8a6790c0c9174a68f512D10A791664e1, 1500000, 1 * month); /* After 1 Month */
-        setInitialDistribution(0xA4399b7C8a6790c0c9174a68f512D10A791664e1, 1500000, 2 * month); /* After 2 Months */
-        setInitialDistribution(0xA4399b7C8a6790c0c9174a68f512D10A791664e1, 1500000, 3 * month); /* After 3 Months */
-        setInitialDistribution(0xA4399b7C8a6790c0c9174a68f512D10A791664e1, 1500000, 4 * month); /* After 4 Months */
-        setInitialDistribution(0xA4399b7C8a6790c0c9174a68f512D10A791664e1, 1500000, 5 * month); /* After 5 Months */
-        setInitialDistribution(0xA4399b7C8a6790c0c9174a68f512D10A791664e1, 1500000, 6 * month); /* After 6 Months */
-        setInitialDistribution(0xA4399b7C8a6790c0c9174a68f512D10A791664e1, 1500000, 7 * month); /* After 7 Months */
-        setInitialDistribution(0xA4399b7C8a6790c0c9174a68f512D10A791664e1, 1500000, 8 * month); /* After 8 Months */
-
+        setInitialDistribution(
+            0xA4399b7C8a6790c0c9174a68f512D10A791664e1,
+            3000000,
+            0 /* No Lock */
+        );
+        setInitialDistribution(
+            0xA4399b7C8a6790c0c9174a68f512D10A791664e1,
+            1500000,
+            1 * month
+        ); /* After 1 Month */
+        setInitialDistribution(
+            0xA4399b7C8a6790c0c9174a68f512D10A791664e1,
+            1500000,
+            2 * month
+        ); /* After 2 Months */
+        setInitialDistribution(
+            0xA4399b7C8a6790c0c9174a68f512D10A791664e1,
+            1500000,
+            3 * month
+        ); /* After 3 Months */
+        setInitialDistribution(
+            0xA4399b7C8a6790c0c9174a68f512D10A791664e1,
+            1500000,
+            4 * month
+        ); /* After 4 Months */
+        setInitialDistribution(
+            0xA4399b7C8a6790c0c9174a68f512D10A791664e1,
+            1500000,
+            5 * month
+        ); /* After 5 Months */
+        setInitialDistribution(
+            0xA4399b7C8a6790c0c9174a68f512D10A791664e1,
+            1500000,
+            6 * month
+        ); /* After 6 Months */
+        setInitialDistribution(
+            0xA4399b7C8a6790c0c9174a68f512D10A791664e1,
+            1500000,
+            7 * month
+        ); /* After 7 Months */
+        setInitialDistribution(
+            0xA4399b7C8a6790c0c9174a68f512D10A791664e1,
+            1500000,
+            8 * month
+        ); /* After 8 Months */
 
         /* Private Sale */
-        setInitialDistribution(0x24A8C45048cB7CF51fC74143fFdBd4CFF3638AC7, 6875000, 0 /* No Lock */);
+        setInitialDistribution(
+            0x24A8C45048cB7CF51fC74143fFdBd4CFF3638AC7,
+            6875000,
+            0 /* No Lock */
+        );
         //setInitialDistribution(0x24A8C45048cB7CF51fC74143fFdBd4CFF3638AC7, 6875000, 1 * month); /* After 1 Month */
         //setInitialDistribution(0x24A8C45048cB7CF51fC74143fFdBd4CFF3638AC7, 6875000, 2 * month); /* After 2 Months */
         //setInitialDistribution(0x24A8C45048cB7CF51fC74143fFdBd4CFF3638AC7, 6875000, 3 * month); /* After 3 Months */
@@ -65,7 +102,6 @@ contract CrodoDistributionContract is Pausable, Ownable {
         //setInitialDistribution(0xDD2AA97FB05aE47d1227FaAc488Ad8678e8Ea4F2, 2000000, 1 * month); /* After 1 Month */
         //setInitialDistribution(0xDD2AA97FB05aE47d1227FaAc488Ad8678e8Ea4F2, 2000000, 2 * month); /* After 2 Months */
 
-
         /* Foundational Reserve Fund */
         //setInitialDistribution(0x20373581F525d1b85f9F9B5e7594eD5EE9a8Bc21, 2500000, year);
         //setInitialDistribution(0x20373581F525d1b85f9F9B5e7594eD5EE9a8Bc21, 2500000, year.add(3 * month)); /* After 3 Month */
@@ -73,68 +109,94 @@ contract CrodoDistributionContract is Pausable, Ownable {
         //setInitialDistribution(0x20373581F525d1b85f9F9B5e7594eD5EE9a8Bc21, 2500000, year.add(9 * month)); /* After 9 Month */
     }
 
-    function setTokenAddress(address _tokenAddress) external onlyOwner whenNotPaused  {
+    function setTokenAddress(address _tokenAddress)
+        external
+        onlyOwner
+        whenNotPaused
+    {
         erc20 = ERC20(_tokenAddress);
     }
 
-    function safeGuardAllTokens(address _address) external onlyOwner whenPaused  { /* In case of needed urgency for the sake of contract bug */
+    function safeGuardAllTokens(address _address)
+        external
+        onlyOwner
+        whenPaused
+    {
+        /* In case of needed urgency for the sake of contract bug */
         require(erc20.transfer(_address, erc20.balanceOf(address(this))));
     }
 
-    function setTGEDate(uint256 _time) external onlyOwner whenNotPaused  {
+    function setTGEDate(uint256 _time) external onlyOwner whenNotPaused {
         TGEDate = _time;
     }
 
     /**
-    *   Should allow any address to trigger it, but since the calls are atomic it should do only once per day
+     *   Should allow any address to trigger it, but since the calls are atomic it should do only once per day
      */
 
-    function triggerTokenSend() external whenNotPaused  {
+    function triggerTokenSend() external whenNotPaused {
         /* Require TGE Date already been set */
         require(TGEDate != 0, "TGE date not set yet");
         /* TGE has not started */
         require(block.timestamp > TGEDate, "TGE still hasn't started");
         /* Test that the call be only done once per day */
-        require(block.timestamp.sub(lastDateDistribution) > 1 days, "Can only be called once a day");
+        require(
+            block.timestamp.sub(lastDateDistribution) > 1 days,
+            "Can only be called once a day"
+        );
         lastDateDistribution = block.timestamp;
         /* Go thru all tokenOwners */
-        for(uint i = 0; i < tokenOwners.length; i++) {
+        for (uint256 i = 0; i < tokenOwners.length; i++) {
             /* Get Address Distribution */
             DistributionStep[] memory d = distributions[tokenOwners[i]];
             /* Go thru all distributions array */
-            for(uint j = 0; j < d.length; j++){
-                if( (block.timestamp.sub(TGEDate) > d[j].unlockDay) /* Verify if unlockDay has passed */
-                    && (d[j].currentAllocated > 0) /* Verify if currentAllocated > 0, so that address has tokens to be sent still */
-                ){
+            for (uint256 j = 0; j < d.length; j++) {
+                if (
+                    (block.timestamp.sub(TGEDate) > d[j].unlockDay) && /* Verify if unlockDay has passed */
+                    (d[j].currentAllocated > 0) /* Verify if currentAllocated > 0, so that address has tokens to be sent still */
+                ) {
                     uint256 sendingAmount;
                     sendingAmount = d[j].currentAllocated;
-                    distributions[tokenOwners[i]][j].currentAllocated = distributions[tokenOwners[i]][j].currentAllocated.sub(sendingAmount);
-                    distributions[tokenOwners[i]][j].amountSent = distributions[tokenOwners[i]][j].amountSent.add(sendingAmount);
+                    distributions[tokenOwners[i]][j]
+                        .currentAllocated = distributions[tokenOwners[i]][j]
+                        .currentAllocated
+                        .sub(sendingAmount);
+                    distributions[tokenOwners[i]][j].amountSent = distributions[
+                        tokenOwners[i]
+                    ][j].amountSent.add(sendingAmount);
                     require(erc20.transfer(tokenOwners[i], sendingAmount));
                 }
             }
         }
     }
 
-    function setInitialDistribution(address _address, uint256 _tokenAmount, uint256 _unlockDays) internal onlyOwner whenNotPaused {
+    function setInitialDistribution(
+        address _address,
+        uint256 _tokenAmount,
+        uint256 _unlockDays
+    ) internal onlyOwner whenNotPaused {
         /* Add tokenOwner to Eachable Mapping */
         bool isAddressPresent = false;
 
         /* Verify if tokenOwner was already added */
-        for(uint i = 0; i < tokenOwners.length; i++) {
-            if(tokenOwners[i] == _address){
+        for (uint256 i = 0; i < tokenOwners.length; i++) {
+            if (tokenOwners[i] == _address) {
                 isAddressPresent = true;
             }
         }
         /* Create DistributionStep Object */
-        DistributionStep memory distributionStep = DistributionStep(_tokenAmount * decimals, _tokenAmount * decimals, _unlockDays, 0);
+        DistributionStep memory distributionStep = DistributionStep(
+            _tokenAmount * decimals,
+            _tokenAmount * decimals,
+            _unlockDays,
+            0
+        );
         /* Attach */
         distributions[_address].push(distributionStep);
 
         /* If Address not present in array of iterable token owners */
-        if(!isAddressPresent){
+        if (!isAddressPresent) {
             tokenOwners.push(_address);
         }
-
     }
 }

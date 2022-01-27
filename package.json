@@ -9,20 +9,30 @@
     "deploy:testnet": "truffle deploy --network testnet --reset",
     "deploy:mainnet": "truffle deploy --network mainnet --reset",
     "coverage": "truffle run coverage",
-    "eslint": "eslint test/",
-    "lint": "npm run eslint && npm run solium",
-    "solium": "solium --dir contracts",
+    "eslint": "eslint --fix test/ migrations/",
+    "lint": "npm run eslint && npm run prettier",
+    "solhint": "npx solhint -f stylish ./contracts/**/*.sol",
+    "prettier": "npx prettier --write ./contracts/**/*.sol",
     "test": "truffle test",
     "truffle": "truffle"
   },
   "dependencies": {
     "@openzeppelin/contracts": "^4.4.2",
     "@truffle/hdwallet-provider": "^2.0.0",
-    "config": "^3.3.7",
-    "solium": "^1.2.5",
     "truffle": "^5.4.29"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "config": "^3.3.7",
+    "eslint": "^7.32.0",
+    "solhint": "^3.3.6",
+    "eslint-config-standard": "^16.0.3",
+    "eslint-plugin-import": "^2.25.4",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^5.2.0",
+    "prettier": "^2.5.1",
+    "prettier-plugin-solidity": "^1.0.0-beta.19"
+  }
 }
