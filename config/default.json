@@ -10,8 +10,8 @@
     },
     "testnet": {
         "blockchain": {
-            "rpc": "https://cronos-testnet-3.crypto.org",
-            "networkId": "*"
+            "rpc": "https://cronos-testnet-3.crypto.org:8545",
+            "networkId": "338"
         },
         "truffle": {
             "privateKey": ""
