@@ -7,6 +7,23 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 
+/*
+ * Params for the CROD token:
+ * Total supply - 100_000_000 CROD
+ * Initial supply - 26_300_000 CROD
+ *
+ * Implemented vesting:
+ *
+ * 5% Seed - 20% unlocked at listing, 20% each month thereafter
+ * 6% Private sale - 20% unlocked at listing, 20% each month thereafter
+ * 2% Public sale - 20% unlocked at listing, 20% each month thereafter
+ * 25% Team - 100% locked for 7 month, 10% unlocked each month thereafter
+ * 5% Advisors - 100% locked for 7 months, 10% unlocked each month thereafter
+ * 20% Liquidity - Fully unlocked
+ * 32% marketing, staking rewards, airdrops, ambassador program - 10% unlocked, 5% unlocked each month. \
+ *   Unused tokens for these purposes will be burned.
+ */
+
 contract CrodoDistributionContract is Pausable, Ownable {
     using SafeMath for uint256;
 
@@ -16,6 +33,15 @@ contract CrodoDistributionContract is Pausable, Ownable {
     uint256 public constant month = 30 days;
     uint256 public constant year = 365 days;
     uint256 public lastDateDistribution = 0;
+
+    // TODO: Replace these addresses with correct ones
+    address seedWallet = 0xA4399b7C8a6790c0c9174a68f512D10A791664e1;
+    address privSaleWallet = 0xA4399b7C8a6790c0c9174a68f512D10A791664e1;
+    address pubSaleWallet = 0xA4399b7C8a6790c0c9174a68f512D10A791664e1;
+    address teamWallet = 0xA4399b7C8a6790c0c9174a68f512D10A791664e1;
+    address advisorsWallet = 0xA4399b7C8a6790c0c9174a68f512D10A791664e1;
+    address liquidityWallet = 0xA4399b7C8a6790c0c9174a68f512D10A791664e1;
+    address otherWallet = 0xA4399b7C8a6790c0c9174a68f512D10A791664e1;
 
     mapping(address => DistributionStep[]) public distributions; /* Distribution object */
 
@@ -29,84 +55,39 @@ contract CrodoDistributionContract is Pausable, Ownable {
     }
 
     constructor() public {
-        /* Seed */
-        setInitialDistribution(
-            0xA4399b7C8a6790c0c9174a68f512D10A791664e1,
-            3000000,
-            0 /* No Lock */
-        );
-        setInitialDistribution(
-            0xA4399b7C8a6790c0c9174a68f512D10A791664e1,
-            1500000,
-            1 * month
-        ); /* After 1 Month */
-        setInitialDistribution(
-            0xA4399b7C8a6790c0c9174a68f512D10A791664e1,
-            1500000,
-            2 * month
-        ); /* After 2 Months */
-        setInitialDistribution(
-            0xA4399b7C8a6790c0c9174a68f512D10A791664e1,
-            1500000,
-            3 * month
-        ); /* After 3 Months */
-        setInitialDistribution(
-            0xA4399b7C8a6790c0c9174a68f512D10A791664e1,
-            1500000,
-            4 * month
-        ); /* After 4 Months */
-        setInitialDistribution(
-            0xA4399b7C8a6790c0c9174a68f512D10A791664e1,
-            1500000,
-            5 * month
-        ); /* After 5 Months */
-        setInitialDistribution(
-            0xA4399b7C8a6790c0c9174a68f512D10A791664e1,
-            1500000,
-            6 * month
-        ); /* After 6 Months */
-        setInitialDistribution(
-            0xA4399b7C8a6790c0c9174a68f512D10A791664e1,
-            1500000,
-            7 * month
-        ); /* After 7 Months */
-        setInitialDistribution(
-            0xA4399b7C8a6790c0c9174a68f512D10A791664e1,
-            1500000,
-            8 * month
-        ); /* After 8 Months */
+        // 5% Seed - 20% unlocked at listing, 20% each month thereafter
+        for (uint8 i = 0; i < 5; ++i) {
+            setInitialDistribution(seedWallet, 1000000, i * month);
+        }
 
-        /* Private Sale */
-        setInitialDistribution(
-            0x24A8C45048cB7CF51fC74143fFdBd4CFF3638AC7,
-            6875000,
-            0 /* No Lock */
-        );
-        //setInitialDistribution(0x24A8C45048cB7CF51fC74143fFdBd4CFF3638AC7, 6875000, 1 * month); /* After 1 Month */
-        //setInitialDistribution(0x24A8C45048cB7CF51fC74143fFdBd4CFF3638AC7, 6875000, 2 * month); /* After 2 Months */
-        //setInitialDistribution(0x24A8C45048cB7CF51fC74143fFdBd4CFF3638AC7, 6875000, 3 * month); /* After 3 Months */
+        // 6% Private sale - 20% unlocked at listing, 20% each month thereafter
+        for (uint8 i = 0; i < 5; ++i) {
+            setInitialDistribution(privSaleWallet, 1200000, i * month);
+        }
 
-        /* Team & Advisors */
-        //setInitialDistribution(0x5d1c9B0B0807573B8976733dF3BaAf0102E1b3F8, 2500000, year);
-        //setInitialDistribution(0x5d1c9B0B0807573B8976733dF3BaAf0102E1b3F8, 2500000, year.add(3 * month)); /* After 3 Month */
-        //setInitialDistribution(0x5d1c9B0B0807573B8976733dF3BaAf0102E1b3F8, 2500000, year.add(6 * month)); /* After 6 Month */
-        //setInitialDistribution(0x5d1c9B0B0807573B8976733dF3BaAf0102E1b3F8, 2500000, year.add(9 * month)); /* After 9 Month */
+        // 2% Public sale - 20% unlocked at listing, 20% each month thereafter
+        for (uint8 i = 0; i < 5; ++i) {
+            setInitialDistribution(pubSaleWallet, 400000, i * month);
+        }
 
-        /* Network Growth Growth */
-        //setInitialDistribution(0x36Dc5e71304a3826C54EF6F8a19C2c4160e8ce9c, 3000000, 0 /* No Lock */);
-        //setInitialDistribution(0x36Dc5e71304a3826C54EF6F8a19C2c4160e8ce9c, 1000000, 1 * month); /* After 1 Month */
-        //setInitialDistribution(0x36Dc5e71304a3826C54EF6F8a19C2c4160e8ce9c, 1000000, 2 * month); /* After 2 Months */
+        // 25% Team - 100% locked for 7 month, 10% unlocked each month thereafter
+        for (uint8 i = 7; i < 17; ++i) {
+            setInitialDistribution(teamWallet, 2500000, i * month);
+        }
 
-        /* Liquidity Fund */
-        //setInitialDistribution(0xDD2AA97FB05aE47d1227FaAc488Ad8678e8Ea4F2, 5000000, 0 /* No Lock */);
-        //setInitialDistribution(0xDD2AA97FB05aE47d1227FaAc488Ad8678e8Ea4F2, 2000000, 1 * month); /* After 1 Month */
-        //setInitialDistribution(0xDD2AA97FB05aE47d1227FaAc488Ad8678e8Ea4F2, 2000000, 2 * month); /* After 2 Months */
+        // 5% Advisors - 100% locked for 7 months, 10% unlocked each month thereafter
+        for (uint8 i = 7; i < 17; ++i) {
+            setInitialDistribution(advisorsWallet, 500000, i * month);
+        }
 
-        /* Foundational Reserve Fund */
-        //setInitialDistribution(0x20373581F525d1b85f9F9B5e7594eD5EE9a8Bc21, 2500000, year);
-        //setInitialDistribution(0x20373581F525d1b85f9F9B5e7594eD5EE9a8Bc21, 2500000, year.add(3 * month)); /* After 3 Month */
-        //setInitialDistribution(0x20373581F525d1b85f9F9B5e7594eD5EE9a8Bc21, 2500000, year.add(6 * month)); /* After 6 Month */
-        //setInitialDistribution(0x20373581F525d1b85f9F9B5e7594eD5EE9a8Bc21, 2500000, year.add(9 * month)); /* After 9 Month */
+        // 20% Liquidity - Fully unlocked
+        setInitialDistribution(liquidityWallet, 20000000, 0);
+
+        // 32% marketing, staking rewards, airdrops, ambassador program - 10% unlocked, 5% unlocked each month.
+        setInitialDistribution(otherWallet, 10000000, 0);
+        for (uint8 i = 1; i < 17; ++i) {
+            setInitialDistribution(otherWallet, 5000000, i * month);
+        }
     }
 
     function setTokenAddress(address _tokenAddress)
@@ -151,12 +132,12 @@ contract CrodoDistributionContract is Pausable, Ownable {
             DistributionStep[] memory d = distributions[tokenOwners[i]];
             /* Go thru all distributions array */
             for (uint256 j = 0; j < d.length; j++) {
+                /* If lock time has passed and address didn't take all the tokens already */
                 if (
-                    (block.timestamp.sub(TGEDate) > d[j].unlockDay) && /* Verify if unlockDay has passed */
-                    (d[j].currentAllocated > 0) /* Verify if currentAllocated > 0, so that address has tokens to be sent still */
+                    (block.timestamp.sub(TGEDate) > d[j].unlockDay) &&
+                    (d[j].currentAllocated > 0)
                 ) {
-                    uint256 sendingAmount;
-                    sendingAmount = d[j].currentAllocated;
+                    uint256 sendingAmount = d[j].currentAllocated;
                     distributions[tokenOwners[i]][j]
                         .currentAllocated = distributions[tokenOwners[i]][j]
                         .currentAllocated
@@ -182,6 +163,7 @@ contract CrodoDistributionContract is Pausable, Ownable {
         for (uint256 i = 0; i < tokenOwners.length; i++) {
             if (tokenOwners[i] == _address) {
                 isAddressPresent = true;
+                break;
             }
         }
         /* Create DistributionStep Object */
