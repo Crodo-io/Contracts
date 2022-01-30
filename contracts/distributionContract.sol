@@ -29,7 +29,7 @@ contract CrodoDistributionContract is Pausable, Ownable {
 
     uint256 public constant decimals = 1 ether;
     address[] public tokenOwners; /* Tracks distributions mapping (iterable) */
-    uint256 public TGEDate = 0; /* Date From where the distribution starts (TGE) */
+    uint48 public TGEDate = 0; /* Date From where the distribution starts (TGE) */
     uint256 public constant month = 30 days;
     uint256 public constant year = 365 days;
     uint256 public lastDateDistribution = 0;
@@ -54,35 +54,57 @@ contract CrodoDistributionContract is Pausable, Ownable {
         uint256 amountSent;
     }
 
-    constructor() public {
+    constructor() {
+        setSeedRound();
+        setPrivateRound();
+        // setPublicRound();
+        // setTeamRound();
+        // setAdvisorsRound();
+        // setLiquidityRound();
+        // setOtherRound();
+    }
+
+    function setSeedRound() internal onlyOwner {
         // 5% Seed - 20% unlocked at listing, 20% each month thereafter
         for (uint8 i = 0; i < 5; ++i) {
             setInitialDistribution(seedWallet, 1000000, i * month);
         }
+    }
 
+    function setPrivateRound() internal onlyOwner {
         // 6% Private sale - 20% unlocked at listing, 20% each month thereafter
         for (uint8 i = 0; i < 5; ++i) {
             setInitialDistribution(privSaleWallet, 1200000, i * month);
         }
+    }
 
+    function setPublicRound() internal onlyOwner {
         // 2% Public sale - 20% unlocked at listing, 20% each month thereafter
         for (uint8 i = 0; i < 5; ++i) {
             setInitialDistribution(pubSaleWallet, 400000, i * month);
         }
+    }
 
+    function setTeamRound() internal onlyOwner {
         // 25% Team - 100% locked for 7 month, 10% unlocked each month thereafter
         for (uint8 i = 7; i < 17; ++i) {
             setInitialDistribution(teamWallet, 2500000, i * month);
         }
+    }
 
+    function setAdvisorsRound() internal onlyOwner {
         // 5% Advisors - 100% locked for 7 months, 10% unlocked each month thereafter
         for (uint8 i = 7; i < 17; ++i) {
             setInitialDistribution(advisorsWallet, 500000, i * month);
         }
+    }
 
+    function setLiquidityRound() internal onlyOwner {
         // 20% Liquidity - Fully unlocked
         setInitialDistribution(liquidityWallet, 20000000, 0);
+    }
 
+    function setOtherRound() internal onlyOwner {
         // 32% marketing, staking rewards, airdrops, ambassador program - 10% unlocked, 5% unlocked each month.
         setInitialDistribution(otherWallet, 10000000, 0);
         for (uint8 i = 1; i < 17; ++i) {
@@ -107,7 +129,7 @@ contract CrodoDistributionContract is Pausable, Ownable {
         require(erc20.transfer(_address, erc20.balanceOf(address(this))));
     }
 
-    function setTGEDate(uint256 _time) external onlyOwner whenNotPaused {
+    function setTGEDate(uint48 _time) external onlyOwner whenNotPaused {
         TGEDate = _time;
     }
 
