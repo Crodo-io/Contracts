@@ -51,13 +51,4 @@ contract("CrodoToken", (accounts) => {
             new BigNumber(await token.cap()).minus(minted)
         )
     })
-
-    it("transfer instruction emits Transfer event", async () => {
-        // const mintAmount = 100
-        // const transferAmount = 50
-        // await token.mint(owner, mintAmount)
-        // const { logs } = await token.transfer(recipient, transferAmount)
-        // const event = logs.find(e => e.event === "Transfer")
-        // assert.notEqual(event, undefined)
-    })
 })
