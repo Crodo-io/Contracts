@@ -19,6 +19,7 @@ contract CrodoToken is ERC20, ERC20Pausable, ERC20Capped {
         ERC20(_name, _symbol)
     {
         distributionContractAddress = _distributionContract;
+        _mint(distributionContractAddress, TOTAL_CAP);
     }
 
     function mint(address account, uint256 amount) public {
@@ -30,10 +31,6 @@ contract CrodoToken is ERC20, ERC20Pausable, ERC20Capped {
         virtual
         override(ERC20, ERC20Capped)
     {
-        // require(
-        //     account == distributionContractAddress,
-        //     "Only distribution contract can mint Crodo tokens"
-        // );
         ERC20Capped._mint(account, amount);
     }
 

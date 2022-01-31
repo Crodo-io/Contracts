@@ -19,6 +19,7 @@
   "dependencies": {
     "@openzeppelin/contracts": "^4.4.2",
     "@truffle/hdwallet-provider": "^2.0.0",
+    "bignumber.js": "^9.0.2",
     "truffle": "^5.4.29"
   },
   "keywords": [],

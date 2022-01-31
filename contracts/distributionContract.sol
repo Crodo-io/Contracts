@@ -133,6 +133,10 @@ contract CrodoDistributionContract is Pausable, Ownable {
         TGEDate = _time;
     }
 
+    function getTGEDate() external view returns (uint48) {
+        return TGEDate;
+    }
+
     /**
      *   Should allow any address to trigger it, but since the calls are atomic it should do only once per day
      */
