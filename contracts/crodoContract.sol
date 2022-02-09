@@ -42,6 +42,10 @@ contract CRDStake is AccessControl, ReentrancyGuard {
         uint48 stakeTime;
         uint48 unlockTime;
         uint48 lockTime;
+        // Used to calculate how long the tokens are being staked,
+        // the difference between `stakeTime` is that `stakedSince` only updates
+        // when user withdraws tokens from the stake pull.
+        uint48 stakedSince;
         uint160 stakeAmount;
         uint256 accumulatedRewards;
     }
@@ -109,6 +113,14 @@ contract CRDStake is AccessControl, ReentrancyGuard {
         returns (uint48 dateTime)
     {
         return userMap[_staker].stakeTime;
+    }
+
+    function stakedSince(address _staker)
+        external
+        view
+        returns (uint48 dateTime)
+    {
+        return userMap[_staker].stakedSince;
     }
 
     function stakeAmount(address _staker)
@@ -393,6 +405,10 @@ contract CRDStake is AccessControl, ReentrancyGuard {
         // update stake Time to current time (start new reward period)
         // will also reset userClaimableRewards()
         user.stakeTime = toUint48(block.timestamp);
+
+        if (user.stakedSince == 0) {
+            user.stakedSince = toUint48(block.timestamp);
+        }
     }
 
     /**
@@ -457,6 +473,7 @@ contract CRDStake is AccessControl, ReentrancyGuard {
 
         require(amount <= user.stakeAmount, "withdraw amount > staked amount");
         user.stakeAmount -= toUint160(amount);
+        user.stakedSince = toUint48(block.timestamp);
         tokenTotalStaked -= amount;
 
         // using SafeERC20 for IERC20 => will revert in case of error
@@ -479,6 +496,7 @@ contract CRDStake is AccessControl, ReentrancyGuard {
         User storage user = userMap[msg.sender];
         user.accumulatedRewards = 0;
         user.stakeTime = toUint48(block.timestamp); // will reset userClaimableRewards to 0
+        user.stakedSince = toUint48(block.timestamp);
         // user.stakeAmount = unchanged
 
         require(
