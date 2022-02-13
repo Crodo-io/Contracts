@@ -28,7 +28,7 @@ contract("CrodoToken", (accounts) => {
     })
 
     it("test immediate mint according to distribution policy", async () => {
-        await dist.triggerTokenSend();
+        await dist.triggerTokenSend()
 
         let immediateMint =
             new BigNumber(
