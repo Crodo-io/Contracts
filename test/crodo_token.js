@@ -5,8 +5,6 @@ const BigNumber = require("bignumber.js")
 contract("CrodoToken", (accounts) => {
     let token
     let dist
-    const owner = accounts[0]
-    const recipient = accounts[1]
 
     beforeEach(async () => {
         dist = await DistributionContract.new()
@@ -17,7 +15,7 @@ contract("CrodoToken", (accounts) => {
     })
 
     it("test basic attributes of the Crodo token", async () => {
-        let tokenCap = new BigNumber(100000000).multipliedBy(1e+18)
+        const tokenCap = new BigNumber(100000000).multipliedBy(1e+18)
         assert.equal(await token.name(), "CrodoToken")
         assert.equal(await token.symbol(), "CROD")
         assert.equal(await token.decimals(), 18)
@@ -30,7 +28,7 @@ contract("CrodoToken", (accounts) => {
     it("test immediate mint according to distribution policy", async () => {
         await dist.triggerTokenSend()
 
-        let immediateMint =
+        const immediateMint =
             new BigNumber(
                 1000000 + // Seed round
                 1200000 // Private round
@@ -38,8 +36,8 @@ contract("CrodoToken", (accounts) => {
                 // 20000000 + // Liquidity round
                 // 10000000 // Other round
             ).multipliedBy(1e+18)
-        let immediateReceiver = "0xA4399b7C8a6790c0c9174a68f512D10A791664e1"
-        let minted = Number(await token.balanceOf(immediateReceiver))
+        const immediateReceiver = "0xA4399b7C8a6790c0c9174a68f512D10A791664e1"
+        const minted = Number(await token.balanceOf(immediateReceiver))
 
         assert.equal(
             immediateMint,

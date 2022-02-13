@@ -5,9 +5,9 @@ const TGEDate = new Date(2022, 1, 30).getTime()
 
 module.exports = async function (deployer) {
     await deployer.deploy(CrodoDistributionContract)
-    let dist = await CrodoDistributionContract.deployed()
+    const dist = await CrodoDistributionContract.deployed()
     await deployer.deploy(CrodoToken, dist.address)
-    let token = await CrodoToken.deployed()
+    const token = await CrodoToken.deployed()
     await dist.setTokenAddress(token.address)
 
     if (TGEDate <= Date.now()) {

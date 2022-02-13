@@ -30,9 +30,11 @@ contract CrodoPrivateSale is Ownable {
     mapping(address => Participant) public participants;
     address[] participantAddrs;
 
-    constructor(address _crodoToken, address _usdtAddress, uint256 _USDTPerToken)
-        Ownable()
-    {
+    constructor(
+        address _crodoToken,
+        address _usdtAddress,
+        uint256 _USDTPerToken
+    ) Ownable() {
         crodoToken = ERC20(_crodoToken);
         usdtToken = ERC20(_usdtAddress);
         USDTPerToken = _USDTPerToken;
@@ -61,9 +63,7 @@ contract CrodoPrivateSale is Ownable {
         emit ParticipantAdded(_participant);
     }
 
-    function removeParticipant(
-        address _participant
-    ) external onlyOwner {
+    function removeParticipant(address _participant) external onlyOwner {
         Participant memory participant = participants[_participant];
         totalMaxBuyAllowed -= participant.maxBuyAllowed;
         totalMinBuyAllowed -= participant.minBuyAllowed;
@@ -72,12 +72,16 @@ contract CrodoPrivateSale is Ownable {
         emit ParticipantRemoved(_participant);
     }
 
-    function calculateUSDTPrice(uint256 amount) internal view returns (uint256) {
+    function calculateUSDTPrice(uint256 amount)
+        internal
+        view
+        returns (uint256)
+    {
         return amount * USDTPerToken;
     }
 
     // Main function to purchase tokens during Private Sale. Buyer pays in fixed
-    // rate of USDT for requested amount of CROD tokens. The USDT tokens must be 
+    // rate of USDT for requested amount of CROD tokens. The USDT tokens must be
     // delegated for use to this contract beforehand by the user (call to ERC20.approve)
     //
     // @IMPORTANT: `amount` is expected to be in non-decimal form,
@@ -90,7 +94,8 @@ contract CrodoPrivateSale is Ownable {
     function lockTokens(uint256 amount) external returns (uint256) {
         // Cover case 1
         require(
-            (totalBought + amount * (10 ** crodoToken.decimals())) < contractBalance(),
+            (totalBought + amount * (10**crodoToken.decimals())) <
+                contractBalance(),
             "Contract doesn't have requested amount of tokens left"
         );
 
@@ -120,8 +125,8 @@ contract CrodoPrivateSale is Ownable {
         );
 
         usdtToken.transferFrom(msg.sender, address(this), usdtPrice);
-        participant.reserved += amount * (10 ** crodoToken.decimals());
-        totalBought += amount * (10 ** crodoToken.decimals());
+        participant.reserved += amount * (10**crodoToken.decimals());
+        totalBought += amount * (10**crodoToken.decimals());
         return amount;
     }
 

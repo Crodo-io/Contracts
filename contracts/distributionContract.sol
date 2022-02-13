@@ -54,10 +54,7 @@ contract CrodoDistributionContract is Pausable, Ownable {
         uint256 amountSent;
     }
 
-    constructor()
-        Ownable()
-        Pausable()
-    {
+    constructor() Ownable() Pausable() {
         setSeedRound();
         setPrivateRound();
         // setPublicRound();
