@@ -14,7 +14,7 @@ contract("CrodoToken", (accounts) => {
     let tokensForSale
     const owner = accounts[0]
     const crodoDecimals = 18
-    const usdtDecimals = 18
+    const usdtDecimals = 6
 
     beforeEach(async () => {
         crodoToken = await TestToken.new(crodoDecimals, owner, 0)
@@ -64,8 +64,8 @@ contract("CrodoToken", (accounts) => {
         await privateSale.lockTokens(10)
 
         assert.equal(
-            Number(await privateSale.reservedBy(owner)),
-            amountToLamports(10, usdtDecimals)
+            amountToLamports(10, crodoDecimals),
+            Number(await privateSale.reservedBy(owner))
         )
         assert.equal(
             userUSDTBefore - usdtPrice,
