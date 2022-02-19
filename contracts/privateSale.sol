@@ -5,8 +5,10 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/security/Pausable.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
 
-contract CrodoPrivateSale is Ownable {
+contract CrodoPrivateSale is Ownable, Pausable {
     using SafeMath for uint256;
 
     event ParticipantAdded(address participant);
@@ -20,12 +22,17 @@ contract CrodoPrivateSale is Ownable {
         uint256 minBuyAllowed;
         uint256 maxBuyAllowed;
         uint256 reserved;
+        uint256 sent;
     }
 
     uint256 public totalMaxBuyAllowed;
     uint256 public totalMinBuyAllowed;
     uint256 public totalBought;
     uint256 public USDTPerToken;
+    uint48 public latestRelease; // Time of the latest release
+    uint48 public releaseInterval = 30 days;
+    uint8 public totalReleases = 10;
+    uint8 public currentRelease;
 
     mapping(address => Participant) public participants;
     address[] participantAddrs;
@@ -40,8 +47,16 @@ contract CrodoPrivateSale is Ownable {
         USDTPerToken = _USDTPerToken;
     }
 
+    function close() public whenNotPaused {
+        _pause();
+    }
+
     function reservedBy(address participant) public view returns (uint256) {
         return participants[participant].reserved;
+    }
+
+    function setReleaseInterval(uint48 _interval) external onlyOwner whenNotPaused {
+        releaseInterval = _interval;
     }
 
     function contractBalance() internal view returns (uint256) {
@@ -52,7 +67,7 @@ contract CrodoPrivateSale is Ownable {
         address _participant,
         uint256 minBuyAllowed,
         uint256 maxBuyAllowed
-    ) external onlyOwner {
+    ) external onlyOwner whenNotPaused {
         Participant storage participant = participants[_participant];
         participant.minBuyAllowed = minBuyAllowed;
         participant.maxBuyAllowed = maxBuyAllowed;
@@ -63,7 +78,7 @@ contract CrodoPrivateSale is Ownable {
         emit ParticipantAdded(_participant);
     }
 
-    function removeParticipant(address _participant) external onlyOwner {
+    function removeParticipant(address _participant) external onlyOwner whenNotPaused {
         Participant memory participant = participants[_participant];
         totalMaxBuyAllowed -= participant.maxBuyAllowed;
         totalMinBuyAllowed -= participant.minBuyAllowed;
@@ -91,7 +106,7 @@ contract CrodoPrivateSale is Ownable {
     // 1) Our contract doesn't have requested amount of tokens left
     // 2) User tries to exceed their buy limit
     // 3) User tries to purchase tokens below their min limit
-    function lockTokens(uint256 amount) external returns (uint256) {
+    function lockTokens(uint256 amount) external whenNotPaused returns (uint256) {
         // Cover case 1
         require(
             (totalBought + amount * (10**crodoToken.decimals())) <
@@ -131,23 +146,46 @@ contract CrodoPrivateSale is Ownable {
     }
 
     // Releases locked tokens to buyers, after which resets all contract state to zero
-    function releaseTokens() external onlyOwner returns (uint256) {
+    function releaseTokens() external onlyOwner whenPaused returns (uint256) {
+        if (currentRelease != 0) {
+            require(
+                latestRelease + releaseInterval <= block.timestamp,
+                string(abi.encodePacked(
+                    "Can only release tokens after interval has passed since last release, last release time: ",
+                    Strings.toString(uint256(latestRelease))
+                ))
+            );
+        }
+        ++currentRelease;
+        latestRelease = uint48(block.timestamp);
+        uint256 tokensSent = 0;
         for (uint32 i = 0; i < participantAddrs.length; ++i) {
             address participantAddr = participantAddrs[i];
             Participant storage participant = participants[participantAddr];
             if (participant.reserved > 0) {
-                // This check is pretty much unnecessary, tokens wouldn't be reserved if they exceed contract balance at
-                // the point of reservation anyway, so if this require fails, then it must be caused by internal error.
+                uint256 roundAmount = participant.reserved / totalReleases;
+
+                // If on the last release tokens don't round up after dividing,
+                // just send the whole remaining tokens
+                if (currentRelease >= totalReleases &&
+                    roundAmount < (participant.reserved - participant.sent)
+                ) {
+                    roundAmount = participant.reserved - participant.sent;
+                }
+
                 require(
-                    participant.reserved < contractBalance(),
-                    "Contract doens't have enough tokens to transfer to buyer"
+                    roundAmount <= contractBalance(),
+                    "Internal Error: Contract doens't have enough tokens to transfer to buyer"
                 );
-                crodoToken.transfer(participantAddr, participant.reserved);
-                participant.reserved = 0;
+
+                crodoToken.transfer(
+                    participantAddr,
+                    roundAmount
+                );
+                participant.sent += roundAmount;
+                tokensSent += roundAmount;
             }
         }
-        uint256 tokensSent = totalBought;
-        totalBought = 0;
         return tokensSent;
     }
 }

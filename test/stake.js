@@ -3,7 +3,7 @@ const CRDStake = artifacts.require("CRDStake")
 const BigNumber = require("bignumber.js")
 
 function amountToLamports (amount, decimals) {
-    return new BigNumber(amount).multipliedBy(10 ** decimals)
+    return new BigNumber(amount).multipliedBy(10 ** decimals).integerValue()
 }
 
 contract("CrodoToken", (accounts) => {

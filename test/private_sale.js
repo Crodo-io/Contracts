@@ -3,7 +3,7 @@ const TestToken = artifacts.require("TestToken")
 const BigNumber = require("bignumber.js")
 
 function amountToLamports (amount, decimals) {
-    return new BigNumber(amount).multipliedBy(10 ** decimals)
+    return new BigNumber(amount).multipliedBy(10 ** decimals).integerValue()
 }
 
 contract("CrodoToken", (accounts) => {
@@ -54,17 +54,18 @@ contract("CrodoToken", (accounts) => {
         })
     })
 
-    it("reserve and release 10 tokens", async () => {
-        const usdtPrice = amountToLamports(0.15 * 10, usdtDecimals)
+    it("reserve and release 23 tokens", async () => {
+        const lockingAmount = 23;
+        const usdtPrice = amountToLamports(0.15 * lockingAmount, usdtDecimals)
         await usdtToken.mint(owner, usdtPrice)
         await privateSale.addParticipant(owner, 1, 100)
         await usdtToken.approve(privateSale.address, usdtPrice)
 
         const userUSDTBefore = Number(await usdtToken.balanceOf(owner))
-        await privateSale.lockTokens(10)
+        await privateSale.lockTokens(lockingAmount)
 
         assert.equal(
-            amountToLamports(10, crodoDecimals),
+            Number(amountToLamports(lockingAmount, crodoDecimals)),
             Number(await privateSale.reservedBy(owner))
         )
         assert.equal(
@@ -72,9 +73,17 @@ contract("CrodoToken", (accounts) => {
             Number(await usdtToken.balanceOf(owner))
         )
 
+        await privateSale.setReleaseInterval(0);
+        await privateSale.close()
+
         await privateSale.releaseTokens()
         assert.equal(
-            amountToLamports(10, crodoDecimals),
+            Number(amountToLamports(lockingAmount, crodoDecimals)) * 0.1,
+            Number(await crodoToken.balanceOf(owner))
+        )
+        await privateSale.releaseTokens()
+        assert.equal(
+            Number(amountToLamports(lockingAmount, crodoDecimals)) * 0.2,
             Number(await crodoToken.balanceOf(owner))
         )
     })
