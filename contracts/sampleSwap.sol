@@ -21,7 +21,7 @@ contract Whitelist is Ownable {
         _;
     }
 
-    constructor(bool _hasWhitelisting) public {
+    constructor(bool _hasWhitelisting) {
         hasWhitelisting = _hasWhitelisting;
     }
 
@@ -59,22 +59,22 @@ contract FixedSwap is Pausable, Whitelist {
     uint256[] public purchaseIds; /* All purchaseIds */
     mapping(address => uint256[]) public myPurchases; /* Purchasers mapping */
 
-    ERC20 public erc20;
+    ERC20 public bidToken;
+    ERC20 public askToken;
     bool public isSaleFunded = false;
-    uint256 public decimals = 0;
+    uint256 public decimals;
     bool public unsoldTokensReedemed = false;
-    uint256 public tradeValue; /* Price in Wei */
+    uint256 public tradeValue; /* Price in askToken for single base unit of bidToken */
     uint256 public startDate; /* Start Date  */
     uint256 public endDate; /* End Date  */
-    uint256 public individualMinimumAmount = 0; /* Minimum Amount Per Address */
-    uint256 public individualMaximumAmount = 0; /* Minimum Amount Per Address */
-    uint256 public minimumRaise = 0; /* Minimum Amount of Tokens that have to be sold */
-    uint256 public tokensAllocated = 0; /* Tokens Available for Allocation - Dynamic */
-    uint256 public tokensForSale = 0; /* Tokens Available for Sale */
+    uint256 public individualMinimumAmount; /* Minimum Amount Per Address */
+    uint256 public individualMaximumAmount; /* Maximum Amount Per Address */
+    uint256 public minimumRaise; /* Minimum Amount of Tokens that have to be sold */
+    uint256 public tokensAllocated; /* Tokens Available for Allocation - Dynamic */
+    uint256 public tokensForSale; /* Tokens Available for Sale */
     bool public isTokenSwapAtomic; /* Make token release atomic or not */
-    address payable public FEE_ADDRESS =
-        payable(0xAEb39b67F27b641Ef9F95fB74F1A46b1EE4Efc83); /* Default Address for Fee Percentage */
-    uint256 public feePercentage = 1; /* Default Fee 1% */
+    address public FEE_ADDRESS; /* Default Address for Fee Percentage */
+    uint8 public feePercentage; /* Measured in single decimal points (i.e. 5 = 5%) */
 
     struct Purchase {
         uint256 amount;
@@ -92,7 +92,8 @@ contract FixedSwap is Pausable, Whitelist {
     );
 
     constructor(
-        address _tokenAddress,
+        address _askTokenAddress,
+        address _bidTokenAddress,
         uint256 _tradeValue,
         uint256 _tokensForSale,
         uint256 _startDate,
@@ -101,9 +102,9 @@ contract FixedSwap is Pausable, Whitelist {
         uint256 _individualMaximumAmount,
         bool _isTokenSwapAtomic,
         uint256 _minimumRaise,
-        uint256 _feeAmount,
+        address _feeAddress,
         bool _hasWhitelisting
-    ) public Whitelist(_hasWhitelisting) {
+    ) Whitelist(_hasWhitelisting) {
         /* Confirmations */
         require(
             block.timestamp < _endDate,
@@ -127,14 +128,13 @@ contract FixedSwap is Pausable, Whitelist {
             _minimumRaise <= _tokensForSale,
             "Minimum Raise should be < Tokens For Sale"
         );
-        require(_feeAmount >= feePercentage, "Fee Percentage has to be >= 1");
-        require(_feeAmount <= 99, "Fee Percentage has to be < 100");
 
+        askToken = ERC20(_askTokenAddress);
+        bidToken = ERC20(_bidTokenAddress);
+        tradeValue = _tradeValue;
+        tokensForSale = _tokensForSale;
         startDate = _startDate;
         endDate = _endDate;
-        tokensForSale = _tokensForSale;
-        tradeValue = _tradeValue;
-
         individualMinimumAmount = _individualMinimumAmount;
         individualMaximumAmount = _individualMaximumAmount;
         isTokenSwapAtomic = _isTokenSwapAtomic;
@@ -144,9 +144,8 @@ contract FixedSwap is Pausable, Whitelist {
             minimumRaise = _minimumRaise;
         }
 
-        erc20 = ERC20(_tokenAddress);
-        decimals = erc20.decimals();
-        feePercentage = _feeAmount;
+        FEE_ADDRESS = _feeAddress;
+        decimals = bidToken.decimals();
     }
 
     /**
@@ -200,7 +199,7 @@ contract FixedSwap is Pausable, Whitelist {
     }
 
     function availableTokens() public view returns (uint256) {
-        return erc20.balanceOf(address(this));
+        return bidToken.balanceOf(address(this));
     }
 
     function tokensLeft() public view returns (uint256) {
@@ -294,6 +293,12 @@ contract FixedSwap is Pausable, Whitelist {
         return myPurchases[_address];
     }
 
+    function setFeePercentage(uint8 _feePercentage) public onlyOwner {
+        require(feePercentage == 0, "Fee Percentage can not be modyfied once set");
+        require(_feePercentage <= 99, "Fee Percentage has to be < 100");
+        feePercentage = _feePercentage;
+    }
+
     /* Fund - Pre Sale Start */
     function fund(uint256 _amount) public isSalePreStarted {
         /* Confirm transfered tokens is no more than needed */
@@ -304,7 +309,7 @@ contract FixedSwap is Pausable, Whitelist {
 
         /* Transfer Funds */
         require(
-            erc20.transferFrom(msg.sender, address(this), _amount),
+            bidToken.transferFrom(msg.sender, address(this), _amount),
             "Failed ERC20 token transfer"
         );
 
@@ -332,10 +337,12 @@ contract FixedSwap is Pausable, Whitelist {
             "Amount is less than tokens available"
         );
 
+        uint256 purchaseCost = cost(_amount);
+
         /* Confirm the user has funds for the transfer, confirm the value is equal */
         require(
-            msg.value == cost(_amount),
-            "User has to cover the cost of the swap in ETH, use the cost function to determine"
+            askToken.balanceOf(msg.sender) >= purchaseCost,
+            "User doesn't have enough askToken for purchase"
         );
 
         /* Confirm Amount is bigger than minimum Amount */
@@ -368,7 +375,7 @@ contract FixedSwap is Pausable, Whitelist {
         if (isTokenSwapAtomic) {
             /* Confirm transfer */
             require(
-                erc20.transfer(msg.sender, _amount),
+                bidToken.transfer(msg.sender, _amount),
                 "ERC20 transfer didn't work"
             );
         }
@@ -376,11 +383,12 @@ contract FixedSwap is Pausable, Whitelist {
         uint256 purchase_id = increment;
         increment = increment.add(1);
 
+        askToken.transferFrom(msg.sender, address(this), purchaseCost);
         /* Create new purchase */
         Purchase memory purchase = Purchase(
             _amount,
             msg.sender,
-            msg.value,
+            purchaseCost,
             block.timestamp,
             isTokenSwapAtomic, /* If Atomic Swap */
             false
@@ -409,7 +417,7 @@ contract FixedSwap is Pausable, Whitelist {
         require(isBuyer(purchase_id), "Address is not buyer");
         purchases[purchase_id].wasFinalized = true;
         require(
-            erc20.transfer(msg.sender, purchases[purchase_id].amount),
+            bidToken.transfer(msg.sender, purchases[purchase_id].amount),
             "ERC20 transfer failed"
         );
     }
@@ -436,11 +444,12 @@ contract FixedSwap is Pausable, Whitelist {
     }
 
     /* Admin Functions */
-    function withdrawFunds() external onlyOwner whenNotPaused isSaleFinalized {
+    function withdrawFunds(address tokensReceiver) external onlyOwner whenNotPaused isSaleFinalized {
         require(minimumRaiseAchieved(), "Minimum raise has to be reached");
-        FEE_ADDRESS.transfer(address(this).balance.mul(feePercentage).div(100)); /* Fee Address */
-        address payable seller = payable(msg.sender);
-        seller.transfer(address(this).balance);
+        uint256 contractBalance = askToken.balanceOf(address(this));
+        uint256 feeAmount = contractBalance.mul(feePercentage).div(100);
+        askToken.transfer(FEE_ADDRESS, feeAmount);
+        askToken.transfer(tokensReceiver, contractBalance - feeAmount);
     }
 
     function withdrawUnsoldTokens() external onlyOwner isSaleFinalized {
@@ -457,7 +466,7 @@ contract FixedSwap is Pausable, Whitelist {
         if (unsoldTokens > 0) {
             unsoldTokensReedemed = true;
             require(
-                erc20.transfer(msg.sender, unsoldTokens),
+                bidToken.transfer(msg.sender, unsoldTokens),
                 "ERC20 transfer failed"
             );
         }
@@ -469,8 +478,8 @@ contract FixedSwap is Pausable, Whitelist {
         isSaleFinalized
     {
         require(
-            _tokenAddress != address(erc20),
-            "Token Address has to be diff than the erc20 subject to sale"
+            _tokenAddress != address(bidToken),
+            "Token Address has to be diff than the bidToken subject to sale"
         ); // Confirm tokens addresses are different from main sale one
         ERC20 erc20Token = ERC20(_tokenAddress);
         require(
@@ -480,9 +489,10 @@ contract FixedSwap is Pausable, Whitelist {
     }
 
     /* Safe Pull function */
-    function safePull() external payable onlyOwner whenPaused {
+    function safePull() external onlyOwner whenPaused {
         address payable seller = payable(msg.sender);
         seller.transfer(address(this).balance);
-        erc20.transfer(msg.sender, erc20.balanceOf(address(this)));
+        bidToken.transfer(msg.sender, bidToken.balanceOf(address(this)));
+        askToken.transfer(msg.sender, askToken.balanceOf(address(this)));
     }
 }
