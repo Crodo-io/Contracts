@@ -50,17 +50,18 @@ contract("CrodoToken", (accounts) => {
         let contractBalanceBefore = Number(await stakeToken.balanceOf(stake.address))
     })
 
-    it("user tried to exceed the max stake limit", async () => {
+    it("user tried to exceed the max stake time limit", async () => {
         let stakeAmount = amountToLamports(10, crodoDecimals)
         let lockTime = lockTimePeriodMax + month
 
         await stakeToken.mint(owner, stakeAmount)
         await stakeToken.approve(stake.address, stakeAmount)
-        stake.stake(stakeAmount, lockTime).then(res => {
+        await stake.stake(stakeAmount, lockTime).then(res => {
             assert.fail("This shouldn't happen")
         }).catch(desc => {
-            assert.equal(desc.code, -32000)
-            assert.equal(desc.message, "rpc error: code = InvalidArgument desc = execution reverted: lockTime must by < lockTimePeriodMax: invalid request")
+            assert.equal(desc.reason, "lockTime must by < lockTimePeriodMax")
+            // assert.equal(desc.code, -32000)
+            // assert.equal(desc.message, "rpc error: code = InvalidArgument desc = execution reverted: : invalid request")
         })
     })
 })

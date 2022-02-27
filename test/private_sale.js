@@ -6,7 +6,7 @@ function amountToLamports (amount, decimals) {
     return new BigNumber(amount).multipliedBy(10 ** decimals).integerValue()
 }
 
-contract("CrodoToken", (accounts) => {
+contract("PrivateSale", (accounts) => {
     let crodoToken
     let usdtToken
     let privateSale
@@ -32,11 +32,12 @@ contract("CrodoToken", (accounts) => {
         await privateSale.addParticipant(owner, 1, 49)
         await usdtToken.approve(privateSale.address, usdtPrice)
 
-        privateSale.lockTokens(50).then(res => {
+        await privateSale.lockTokens(50).then(res => {
             assert.fail("This shouldn't happen")
         }).catch(desc => {
-            assert.equal(desc.code, -32000)
-            assert.equal(desc.message, "rpc error: code = InvalidArgument desc = execution reverted: User tried to exceed their buy-high limit: invalid request")
+            assert.equal(desc.reason, "User tried to exceed their buy-high limit")
+            // assert.equal(desc.code, -32000)
+            // assert.equal(desc.message, "rpc error: code = InvalidArgument desc = execution reverted: User tried to exceed their buy-high limit: invalid request")
         })
     })
 
@@ -46,11 +47,12 @@ contract("CrodoToken", (accounts) => {
         await privateSale.addParticipant(owner, 1, 100)
         await usdtToken.approve(privateSale.address, usdtPrice)
 
-        privateSale.lockTokens(10).then(res => {
+        await privateSale.lockTokens(10).then(res => {
             assert.fail("This shouldn't happen")
         }).catch(desc => {
-            assert.equal(desc.code, -32000)
-            assert.equal(desc.message, "rpc error: code = InvalidArgument desc = execution reverted: User doesn't have enough USDT to buy requested tokens: invalid request")
+            assert.equal(desc.reason, "User doesn't have enough USDT to buy requested tokens")
+            // assert.equal(desc.code, -32000)
+            // assert.equal(desc.message, "rpc error: code = InvalidArgument desc = execution reverted: User doesn't have enough USDT to buy requested tokens: invalid request")
         })
     })
 

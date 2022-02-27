@@ -1,20 +1,13 @@
 const HDWalletProvider = require('@truffle/hdwallet-provider')
 const NonceTrackerSubprovider = require('web3-provider-engine/subproviders/nonce-tracker')
 const config = require('config')
+const TestRPC = require('ganache-cli')
 
 module.exports = {
     networks: {
         development: {
-            provider: function() {
-                let w = new HDWalletProvider({
-                    mnemonic: config.get("development.truffle.mnemonic"),
-                    providerOrUrl: config.get("development.blockchain.rpc"),
-                })
-                return w
-            },
-            host: "127.0.0.1",     // Localhost (default: none)
-            port: 8545,            // Standard Ethereum port (default: none)
-            network_id: "*",       // Any network (default: none)
+            provider: TestRPC.provider(),
+            network_id: '*'
         },
         testnet: {
             provider: function () {

@@ -254,6 +254,18 @@ contract FixedSwap is Pausable, Whitelist {
         return _amount.mul(tradeValue).div(10**decimals);
     }
 
+    function boughtByAddress(address _buyer) public view returns (uint256) {
+        uint256[] memory _purchases = getMyPurchases(_buyer);
+        uint256 purchaserTotalAmountPurchased = 0;
+        for (uint256 i = 0; i < _purchases.length; i++) {
+            Purchase memory _purchase = purchases[_purchases[i]];
+            purchaserTotalAmountPurchased = purchaserTotalAmountPurchased.add(
+                _purchase.amount
+            );
+        }
+        return purchaserTotalAmountPurchased;
+    }
+
     function getPurchase(uint256 _purchase_id)
         external
         view
@@ -358,14 +370,7 @@ contract FixedSwap is Pausable, Whitelist {
         );
 
         /* Verify all user purchases, loop thru them */
-        uint256[] memory _purchases = getMyPurchases(msg.sender);
-        uint256 purchaserTotalAmountPurchased = 0;
-        for (uint256 i = 0; i < _purchases.length; i++) {
-            Purchase memory _purchase = purchases[_purchases[i]];
-            purchaserTotalAmountPurchased = purchaserTotalAmountPurchased.add(
-                _purchase.amount
-            );
-        }
+        uint256 purchaserTotalAmountPurchased = boughtByAddress(msg.sender);
         require(
             purchaserTotalAmountPurchased.add(_amount) <=
                 individualMaximumAmount,
@@ -439,8 +444,7 @@ contract FixedSwap is Pausable, Whitelist {
         require(isBuyer(purchase_id), "Address is not buyer");
         purchases[purchase_id].wasFinalized = true;
         purchases[purchase_id].reverted = true;
-        address payable seller = payable(msg.sender);
-        seller.transfer(purchases[purchase_id].ethAmount);
+        askToken.transfer(msg.sender, purchases[purchase_id].ethAmount);
     }
 
     /* Admin Functions */
