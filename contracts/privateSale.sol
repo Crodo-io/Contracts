@@ -29,7 +29,8 @@ contract CrodoPrivateSale is Ownable, Pausable {
     uint256 public totalMinBuyAllowed;
     uint256 public totalBought;
     uint256 public USDTPerToken;
-    uint48 public latestRelease; // Time of the latest release
+    uint48 public initReleaseDate;
+    uint256 public latestRelease; // Time of the latest release
     uint48 public releaseInterval = 30 days;
     uint8 public totalReleases = 10;
     uint8 public currentRelease;
@@ -40,14 +41,16 @@ contract CrodoPrivateSale is Ownable, Pausable {
     constructor(
         address _crodoToken,
         address _usdtAddress,
-        uint256 _USDTPerToken
+        uint256 _USDTPerToken,
+        uint48 _initReleaseDate
     ) Ownable() {
         crodoToken = ERC20(_crodoToken);
         usdtToken = ERC20(_usdtAddress);
         USDTPerToken = _USDTPerToken;
+        initReleaseDate = _initReleaseDate;
     }
 
-    function close() public whenNotPaused {
+    function close() public whenNotPaused onlyOwner {
         _pause();
     }
 
@@ -61,6 +64,25 @@ contract CrodoPrivateSale is Ownable, Pausable {
 
     function contractBalance() internal view returns (uint256) {
         return crodoToken.balanceOf(address(this));
+    }
+
+    function getParticipant(address _participant)
+        public
+        view
+        returns (
+            uint256,
+            uint256,
+            uint256,
+            uint256
+        )
+    {
+        Participant memory participant = participants[_participant];
+        return (
+            participant.minBuyAllowed,
+            participant.maxBuyAllowed,
+            participant.reserved,
+            participant.sent
+        );
     }
 
     function addParticipant(
@@ -147,17 +169,20 @@ contract CrodoPrivateSale is Ownable, Pausable {
 
     // Releases locked tokens to buyers, after which resets all contract state to zero
     function releaseTokens() external onlyOwner whenPaused returns (uint256) {
-        if (currentRelease != 0) {
-            require(
-                latestRelease + releaseInterval <= block.timestamp,
-                string(abi.encodePacked(
-                    "Can only release tokens after interval has passed since last release, last release time: ",
-                    Strings.toString(uint256(latestRelease))
-                ))
-            );
-        }
+        require(
+            initReleaseDate <= block.timestamp,
+            "Initial release date hasn't passed yet"
+           );
+        require(
+            latestRelease + releaseInterval <= block.timestamp,
+            string(abi.encodePacked(
+                "Can only release tokens after interval has passed since last release, last release time: ",
+                Strings.toString(latestRelease)
+            ))
+        );
+
         ++currentRelease;
-        latestRelease = uint48(block.timestamp);
+        latestRelease = block.timestamp;
         uint256 tokensSent = 0;
         for (uint32 i = 0; i < participantAddrs.length; ++i) {
             address participantAddr = participantAddrs[i];

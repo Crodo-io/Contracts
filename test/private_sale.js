@@ -1,9 +1,14 @@
 const CrodoPrivateSale = artifacts.require("CrodoPrivateSale")
 const TestToken = artifacts.require("TestToken")
 const BigNumber = require("bignumber.js")
+const timeMachine = require('ganache-time-traveler');
 
 function amountToLamports (amount, decimals) {
     return new BigNumber(amount).multipliedBy(10 ** decimals).integerValue()
+}
+
+function getTimestamp() {
+    return Math.floor(Date.now() / 1000)
 }
 
 contract("PrivateSale", (accounts) => {
@@ -16,15 +21,35 @@ contract("PrivateSale", (accounts) => {
     const crodoDecimals = 18
     const usdtDecimals = 6
 
+    const day = 60 * 60 * 24
+    const month = day * 30
+    const year = month * 12
+
+    const releaseInterval = 2 * month
+    const initRelease = getTimestamp() + 3 * month
+
     beforeEach(async () => {
+        let snapshot = await timeMachine.takeSnapshot();
+        snapshotId = snapshot['result'];
+
         crodoToken = await TestToken.new(crodoDecimals, owner, 0)
         usdtToken = await TestToken.new(usdtDecimals, owner, 0)
         usdtPrice = amountToLamports(0.15, usdtDecimals)
         tokensForSale = amountToLamports(100000, crodoDecimals)
 
-        privateSale = await CrodoPrivateSale.new(crodoToken.address, usdtToken.address, usdtPrice)
+        privateSale = await CrodoPrivateSale.new(
+            crodoToken.address,
+            usdtToken.address,
+            usdtPrice,
+            initRelease
+        )
+        await privateSale.setReleaseInterval(releaseInterval)
         await crodoToken.mint(privateSale.address, tokensForSale)
     })
+
+    afterEach(async() => {
+        await timeMachine.revertToSnapshot(snapshotId);
+    });
 
     it("user exceeded their buy limit", async () => {
         const usdtPrice = amountToLamports(0.15 * 50, usdtDecimals)
@@ -75,14 +100,16 @@ contract("PrivateSale", (accounts) => {
             Number(await usdtToken.balanceOf(owner))
         )
 
-        await privateSale.setReleaseInterval(0);
         await privateSale.close()
+        await timeMachine.advanceBlockAndSetTime(initRelease + day)
 
         await privateSale.releaseTokens()
         assert.equal(
             Number(amountToLamports(lockingAmount, crodoDecimals)) * 0.1,
             Number(await crodoToken.balanceOf(owner))
         )
+
+        await timeMachine.advanceTimeAndBlock(releaseInterval + day)
         await privateSale.releaseTokens()
         assert.equal(
             Number(amountToLamports(lockingAmount, crodoDecimals)) * 0.2,
