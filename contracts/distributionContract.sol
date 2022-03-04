@@ -57,11 +57,11 @@ contract CrodoDistributionContract is Pausable, Ownable {
     constructor() Ownable() Pausable() {
         setSeedRound();
         setPrivateRound();
-        // setPublicRound();
-        // setTeamRound();
-        // setAdvisorsRound();
-        // setLiquidityRound();
-        // setOtherRound();
+        setPublicRound();
+        setTeamRound();
+        setAdvisorsRound();
+        setLiquidityRound();
+        setOtherRound();
     }
 
     function setSeedRound() internal onlyOwner {

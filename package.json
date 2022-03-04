@@ -30,12 +30,13 @@
   "devDependencies": {
     "config": "^3.3.7",
     "eslint": "^7.32.0",
-    "solhint": "^3.3.6",
     "eslint-config-standard": "^16.0.3",
     "eslint-plugin-import": "^2.25.4",
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-promise": "^5.2.0",
     "prettier": "^2.5.1",
-    "prettier-plugin-solidity": "^1.0.0-beta.19"
+    "prettier-plugin-solidity": "^1.0.0-beta.19",
+    "solhint": "^3.3.6",
+    "solidity-coverage": "^0.7.20"
   }
 }

@@ -31,10 +31,10 @@ contract("CrodoToken", (accounts) => {
         const immediateMint =
             new BigNumber(
                 1000000 + // Seed round
-                1200000 // Private round
-                // 400000 + // Public round
-                // 20000000 + // Liquidity round
-                // 10000000 // Other round
+                1200000 + // Private round
+                400000 + // Public round
+                20000000 + // Liquidity round
+                10000000 // Other round
             ).multipliedBy(1e+18)
         const immediateReceiver = "0xA4399b7C8a6790c0c9174a68f512D10A791664e1"
         const minted = Number(await token.balanceOf(immediateReceiver))

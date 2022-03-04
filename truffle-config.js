@@ -19,7 +19,7 @@ module.exports = {
             },
             network_id: config.get('testnet.blockchain.networkId'),
             port: 8545,
-            gas: 4000000,
+            gas: 20000000,
             gasPrice: 10000000000000
         },
         mainnet: {
@@ -32,7 +32,7 @@ module.exports = {
             },
             network_id: config.get('mainnet.blockchain.networkId'),
             port: 8545,
-            gas: 2000000,
+            gas: 20000000,
             gasPrice: 60000000000
         },
     },
@@ -45,5 +45,6 @@ module.exports = {
                 }
             }
         }
-    }
+    },
+    plugins: [ "solidity-coverage" ]
 }
