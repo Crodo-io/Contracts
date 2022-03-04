@@ -13,6 +13,7 @@ contract CrodoPrivateSale is Ownable, Pausable {
 
     event ParticipantAdded(address participant);
     event ParticipantRemoved(address participant);
+    event ReleaseFinished(uint8 release);
 
     ERC20 public crodoToken;
     ERC20 public usdtToken;
@@ -58,7 +59,11 @@ contract CrodoPrivateSale is Ownable, Pausable {
         return participants[participant].reserved;
     }
 
-    function setReleaseInterval(uint48 _interval) external onlyOwner whenNotPaused {
+    function setReleaseInterval(uint48 _interval)
+        external
+        onlyOwner
+        whenNotPaused
+    {
         releaseInterval = _interval;
     }
 
@@ -100,8 +105,18 @@ contract CrodoPrivateSale is Ownable, Pausable {
         emit ParticipantAdded(_participant);
     }
 
-    function removeParticipant(address _participant) external onlyOwner whenNotPaused {
+    function removeParticipant(address _participant)
+        external
+        onlyOwner
+        whenNotPaused
+    {
         Participant memory participant = participants[_participant];
+
+        require(
+            participant.reserved == 0,
+            "Can't remove participant that has already locked some tokens"
+        );
+
         totalMaxBuyAllowed -= participant.maxBuyAllowed;
         totalMinBuyAllowed -= participant.minBuyAllowed;
 
@@ -128,7 +143,11 @@ contract CrodoPrivateSale is Ownable, Pausable {
     // 1) Our contract doesn't have requested amount of tokens left
     // 2) User tries to exceed their buy limit
     // 3) User tries to purchase tokens below their min limit
-    function lockTokens(uint256 amount) external whenNotPaused returns (uint256) {
+    function lockTokens(uint256 amount)
+        external
+        whenNotPaused
+        returns (uint256)
+    {
         // Cover case 1
         require(
             (totalBought + amount * (10**crodoToken.decimals())) <
@@ -172,13 +191,15 @@ contract CrodoPrivateSale is Ownable, Pausable {
         require(
             initReleaseDate <= block.timestamp,
             "Initial release date hasn't passed yet"
-           );
+        );
         require(
             latestRelease + releaseInterval <= block.timestamp,
-            string(abi.encodePacked(
-                "Can only release tokens after interval has passed since last release, last release time: ",
-                Strings.toString(latestRelease)
-            ))
+            string(
+                abi.encodePacked(
+                    "Can only release tokens after interval has passed since last release, last release time: ",
+                    Strings.toString(latestRelease)
+                )
+            )
         );
 
         ++currentRelease;
@@ -192,7 +213,8 @@ contract CrodoPrivateSale is Ownable, Pausable {
 
                 // If on the last release tokens don't round up after dividing,
                 // just send the whole remaining tokens
-                if (currentRelease >= totalReleases &&
+                if (
+                    currentRelease >= totalReleases &&
                     roundAmount < (participant.reserved - participant.sent)
                 ) {
                     roundAmount = participant.reserved - participant.sent;
@@ -203,14 +225,17 @@ contract CrodoPrivateSale is Ownable, Pausable {
                     "Internal Error: Contract doens't have enough tokens to transfer to buyer"
                 );
 
-                crodoToken.transfer(
-                    participantAddr,
-                    roundAmount
-                );
+                crodoToken.transfer(participantAddr, roundAmount);
                 participant.sent += roundAmount;
                 tokensSent += roundAmount;
             }
         }
+
+        emit ReleaseFinished(currentRelease - 1);
         return tokensSent;
+    }
+
+    function pullUSDT(address receiver, uint256 amount) external onlyOwner {
+        usdtToken.transfer(receiver, amount);
     }
 }

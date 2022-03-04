@@ -1,13 +1,13 @@
 const CrodoPrivateSale = artifacts.require("CrodoPrivateSale")
 const TestToken = artifacts.require("TestToken")
 const BigNumber = require("bignumber.js")
-const timeMachine = require('ganache-time-traveler');
+const timeMachine = require("ganache-time-traveler")
 
 function amountToLamports (amount, decimals) {
     return new BigNumber(amount).multipliedBy(10 ** decimals).integerValue()
 }
 
-function getTimestamp() {
+function getTimestamp () {
     return Math.floor(Date.now() / 1000)
 }
 
@@ -23,14 +23,13 @@ contract("PrivateSale", (accounts) => {
 
     const day = 60 * 60 * 24
     const month = day * 30
-    const year = month * 12
 
     const releaseInterval = 2 * month
     const initRelease = getTimestamp() + 3 * month
 
     beforeEach(async () => {
-        let snapshot = await timeMachine.takeSnapshot();
-        snapshotId = snapshot['result'];
+        const snapshot = await timeMachine.takeSnapshot()
+        snapshotId = snapshot.result
 
         crodoToken = await TestToken.new(crodoDecimals, owner, 0)
         usdtToken = await TestToken.new(usdtDecimals, owner, 0)
@@ -47,9 +46,9 @@ contract("PrivateSale", (accounts) => {
         await crodoToken.mint(privateSale.address, tokensForSale)
     })
 
-    afterEach(async() => {
-        await timeMachine.revertToSnapshot(snapshotId);
-    });
+    afterEach(async () => {
+        await timeMachine.revertToSnapshot(snapshotId)
+    })
 
     it("user exceeded their buy limit", async () => {
         const usdtPrice = amountToLamports(0.15 * 50, usdtDecimals)
@@ -82,7 +81,7 @@ contract("PrivateSale", (accounts) => {
     })
 
     it("reserve and release 23 tokens", async () => {
-        const lockingAmount = 23;
+        const lockingAmount = 23
         const usdtPrice = amountToLamports(0.15 * lockingAmount, usdtDecimals)
         await usdtToken.mint(owner, usdtPrice)
         await privateSale.addParticipant(owner, 1, 100)

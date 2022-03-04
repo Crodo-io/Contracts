@@ -306,7 +306,10 @@ contract FixedSwap is Pausable, Whitelist {
     }
 
     function setFeePercentage(uint8 _feePercentage) public onlyOwner {
-        require(feePercentage == 0, "Fee Percentage can not be modyfied once set");
+        require(
+            feePercentage == 0,
+            "Fee Percentage can not be modyfied once set"
+        );
         require(_feePercentage <= 99, "Fee Percentage has to be < 100");
         feePercentage = _feePercentage;
     }
@@ -448,7 +451,12 @@ contract FixedSwap is Pausable, Whitelist {
     }
 
     /* Admin Functions */
-    function withdrawFunds(address tokensReceiver) external onlyOwner whenNotPaused isSaleFinalized {
+    function withdrawFunds(address tokensReceiver)
+        external
+        onlyOwner
+        whenNotPaused
+        isSaleFinalized
+    {
         require(minimumRaiseAchieved(), "Minimum raise has to be reached");
         uint256 contractBalance = askToken.balanceOf(address(this));
         uint256 feeAmount = contractBalance.mul(feePercentage).div(100);

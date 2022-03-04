@@ -30,8 +30,8 @@ contract("CrodoToken", (accounts) => {
     })
 
     it("stake 10 tokens for 6 months & withdraw them", async () => {
-        let stakeAmount = amountToLamports(10, crodoDecimals)
-        let lockTime = 6 * month
+        const stakeAmount = amountToLamports(10, crodoDecimals)
+        const lockTime = 6 * month
 
         await stakeToken.mint(owner, stakeAmount)
         await stakeToken.approve(stake.address, stakeAmount)
@@ -46,13 +46,13 @@ contract("CrodoToken", (accounts) => {
             Number(await stake.stakeAmount(owner))
         )
 
-        let userBalanceBefore = Number(await stakeToken.balanceOf(owner))
-        let contractBalanceBefore = Number(await stakeToken.balanceOf(stake.address))
+        // const userBalanceBefore = Number(await stakeToken.balanceOf(owner))
+        // const contractBalanceBefore = Number(await stakeToken.balanceOf(stake.address))
     })
 
     it("user tried to exceed the max stake time limit", async () => {
-        let stakeAmount = amountToLamports(10, crodoDecimals)
-        let lockTime = lockTimePeriodMax + month
+        const stakeAmount = amountToLamports(10, crodoDecimals)
+        const lockTime = lockTimePeriodMax + month
 
         await stakeToken.mint(owner, stakeAmount)
         await stakeToken.approve(stake.address, stakeAmount)
@@ -65,4 +65,3 @@ contract("CrodoToken", (accounts) => {
         })
     })
 })
-
