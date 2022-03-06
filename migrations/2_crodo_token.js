@@ -1,7 +1,7 @@
 const CrodoDistributionContract = artifacts.require("CrodoDistributionContract")
 const CrodoToken = artifacts.require("CrodoToken")
 
-const TGEDate = new Date(2022, 1, 30).getTime() // TODO: Set correct TGEDate
+const TGEDate = Math.floor(new Date(2022, 1, 30).getTime() / 1000) // TODO: Set correct TGEDate
 
 // TODO: Set correct addresses
 const seedWallet = "0x72245A3E23E7F73e5eaD2857b990b74a27FB95d4";
@@ -31,8 +31,15 @@ module.exports = async function (deployer) {
     await deployer.deploy(CrodoToken, dist.address)
     const token = await CrodoToken.deployed()
     await dist.setTokenAddress(token.address)
+    await dist.setTGEDate(TGEDate)
 
-    if (TGEDate <= Date.now()) {
-        await dist.setTGEDate(Math.floor(TGEDate / 1000))
-    }
+    await dist.setSeedRound();
+    await dist.setPrivateRound();
+    await dist.setStrategicSaleRound();
+    await dist.setPublicRound();
+    await dist.setTeamRound();
+    await dist.setAdvisorsRound();
+    await dist.setLiquidityRound();
+    await dist.setStrategicRound();
+    await dist.setCommunityRound();
 }

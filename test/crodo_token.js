@@ -107,6 +107,8 @@ contract("CrodoToken", (accounts) => {
             communityWallet
         )
         // await dist.initAllRounds()
+        token = await CrodoToken.new(dist.address)
+        await dist.setTokenAddress(token.address)
         await dist.setSeedRound();
         await dist.setPrivateRound();
         await dist.setStrategicSaleRound();
@@ -116,9 +118,7 @@ contract("CrodoToken", (accounts) => {
         await dist.setLiquidityRound();
         await dist.setStrategicRound();
         await dist.setCommunityRound();
-        token = await CrodoToken.new(dist.address)
         crodoDecimals = await token.decimals();
-        await dist.setTokenAddress(token.address)
         await dist.setTGEDate(TGEDate)
     })
 

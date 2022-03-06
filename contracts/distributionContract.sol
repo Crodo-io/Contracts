@@ -28,7 +28,7 @@ import "@openzeppelin/contracts/security/Pausable.sol";
 contract CrodoDistributionContract is Pausable, Ownable {
     using SafeMath for uint256;
 
-    uint256 public decimals = 1 ether;
+    uint256 public decimals;
     address[] public tokenOwners; /* Tracks distributions mapping (iterable) */
     uint48 public TGEDate = 0; /* Date From where the distribution starts (TGE) */
     uint256 public constant month = 30 days;
@@ -195,7 +195,7 @@ contract CrodoDistributionContract is Pausable, Ownable {
         whenNotPaused
     {
         erc20 = ERC20(_tokenAddress);
-        decimals = erc20.decimals();
+        decimals = 10 ** erc20.decimals();
     }
 
     function safeGuardAllTokens(address _address)
