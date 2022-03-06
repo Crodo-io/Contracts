@@ -215,7 +215,7 @@ contract CrodoPrivateSale is Ownable, Pausable {
                 // just send the whole remaining tokens
                 if (
                     currentRelease >= totalReleases &&
-                    roundAmount < (participant.reserved - participant.sent)
+                    roundAmount != (participant.reserved - participant.sent)
                 ) {
                     roundAmount = participant.reserved - participant.sent;
                 }

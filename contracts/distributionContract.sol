@@ -14,34 +14,37 @@ import "@openzeppelin/contracts/security/Pausable.sol";
  *
  * Implemented vesting:
  *
- * 5% Seed - 20% unlocked at listing, 20% each month thereafter
- * 6% Private sale - 20% unlocked at listing, 20% each month thereafter
- * 2% Public sale - 20% unlocked at listing, 20% each month thereafter
- * 25% Team - 100% locked for 7 month, 10% unlocked each month thereafter
- * 5% Advisors - 100% locked for 7 months, 10% unlocked each month thereafter
- * 20% Liquidity - Fully unlocked
- * 32% marketing, staking rewards, airdrops, ambassador program - 10% unlocked, 5% unlocked each month. \
- *   Unused tokens for these purposes will be burned.
+ * 6% Seed - cliff for 6 month, 3.7% unlocked each month within 27 months
+ * 8% Private sale - cliff for 3 month, 3,85% unlocked each month within 26 months
+ * 8% Strategic sale - cliff for 3 month, 4,17% unlocked each month within 24 months
+ * 4% Public sale - 12% unlocked, cliff for 3 month, 17,6% unlocked each month within 5 months
+ * 15% Team - cliff for 17 months, 4% unlocked each month within 25 months
+ * 6% Advisors - cliff for 17 months, 4% unlocked each month within 25 months
+ * 12% Liquidity - Fully unlocked
+ * 20% Strategic Reserve - cliff for 6 month, 2,85% unlocked each month within 35 months
+ * 21% Community / Ecosystem - 5% unlocked, 2,97% unlocked each month within 33 months
  */
 
 contract CrodoDistributionContract is Pausable, Ownable {
     using SafeMath for uint256;
 
-    uint256 public constant decimals = 1 ether;
+    uint256 public decimals = 1 ether;
     address[] public tokenOwners; /* Tracks distributions mapping (iterable) */
     uint48 public TGEDate = 0; /* Date From where the distribution starts (TGE) */
     uint256 public constant month = 30 days;
     uint256 public constant year = 365 days;
     uint256 public lastDateDistribution = 0;
 
-    // TODO: Replace these addresses with correct ones
-    address seedWallet = 0xA4399b7C8a6790c0c9174a68f512D10A791664e1;
-    address privSaleWallet = 0xA4399b7C8a6790c0c9174a68f512D10A791664e1;
-    address pubSaleWallet = 0xA4399b7C8a6790c0c9174a68f512D10A791664e1;
-    address teamWallet = 0xA4399b7C8a6790c0c9174a68f512D10A791664e1;
-    address advisorsWallet = 0xA4399b7C8a6790c0c9174a68f512D10A791664e1;
-    address liquidityWallet = 0xA4399b7C8a6790c0c9174a68f512D10A791664e1;
-    address otherWallet = 0xA4399b7C8a6790c0c9174a68f512D10A791664e1;
+    // All these addresses must be unique
+    address public seedWallet;
+    address public privSaleWallet;
+    address public strategicSaleWallet;
+    address public pubSaleWallet;
+    address public teamWallet;
+    address public advisorsWallet;
+    address public liquidityWallet;
+    address public strategicWallet;
+    address public communityWallet;
 
     mapping(address => DistributionStep[]) public distributions; /* Distribution object */
 
@@ -54,62 +57,136 @@ contract CrodoDistributionContract is Pausable, Ownable {
         uint256 amountSent;
     }
 
-    constructor() Ownable() Pausable() {
+    constructor(
+        address _seedWallet,
+        address _privSaleWallet,
+        address _strategicSaleWallet,
+        address _pubSaleWallet,
+        address _teamWallet,
+        address _advisorsWallet,
+        address _liquidityWallet,
+        address _strategicWallet,
+        address _communityWallet
+    ) Ownable() Pausable() {
+        seedWallet = _seedWallet;
+        privSaleWallet = _privSaleWallet;
+        strategicSaleWallet = _strategicSaleWallet;
+        pubSaleWallet = _pubSaleWallet;
+        teamWallet = _teamWallet;
+        advisorsWallet = _advisorsWallet;
+        liquidityWallet = _liquidityWallet;
+        strategicWallet = _strategicWallet;
+        communityWallet = _communityWallet;
+    }
+
+    function initAllRounds() external onlyOwner {
         setSeedRound();
         setPrivateRound();
+        setStrategicSaleRound();
         setPublicRound();
         setTeamRound();
         setAdvisorsRound();
         setLiquidityRound();
-        setOtherRound();
+        setStrategicRound();
+        setCommunityRound();
     }
 
-    function setSeedRound() internal onlyOwner {
-        // 5% Seed - 20% unlocked at listing, 20% each month thereafter
-        for (uint8 i = 0; i < 5; ++i) {
-            setInitialDistribution(seedWallet, 1000000, i * month);
+    function setSeedRound() public onlyOwner {
+        require(
+            distributions[seedWallet].length == 0,
+            "Catched try to reinitialize already initialized round"
+        );
+        // 6% Seed - cliff for 6 month, 3.7% unlocked each month within 27 months
+        // The locking and vesting is done in seed sale contract.
+        setInitialDistribution(seedWallet, 6000000, 0);
+    }
+
+    function setPrivateRound() public onlyOwner {
+        require(
+            distributions[privSaleWallet].length == 0,
+            "Catched try to reinitialize already initialized round"
+        );
+        // 8% Private sale - cliff for 3 month, 3,85% unlocked each month within 26 months
+        // The locking and vesting is done in private sale contract.
+        setInitialDistribution(privSaleWallet, 8000000, 0);
+    }
+
+    function setStrategicSaleRound() public onlyOwner {
+        require(
+            distributions[strategicSaleWallet].length == 0,
+            "Catched try to reinitialize already initialized round"
+        );
+        // 8% Strategic sale - cliff for 3 month, 4,17% unlocked each month within 24 months
+        // The locking and vesting is done in strategic sale contract.
+        setInitialDistribution(strategicSaleWallet, 8000000, 0);
+    }
+
+    function setPublicRound() public onlyOwner {
+        require(
+            distributions[pubSaleWallet].length == 0,
+            "Catched try to reinitialize already initialized round"
+        );
+        // 4% Public sale - 12% unlocked, cliff for 3 month, 17,6% unlocked each month within 5 months
+        setInitialDistribution(pubSaleWallet, 4000000, 0);
+    }
+
+    function setTeamRound() public onlyOwner {
+        require(
+            distributions[teamWallet].length == 0,
+            "Catched try to reinitialize already initialized round"
+        );
+        // 15% Team - cliff for 17 months, 4% unlocked each month within 25 months
+        for (uint8 i = 17; i < 42; ++i) {
+            setInitialDistribution(teamWallet, 600000, i * month);
         }
     }
 
-    function setPrivateRound() internal onlyOwner {
-        // 6% Private sale - 20% unlocked at listing, 20% each month thereafter
-        for (uint8 i = 0; i < 5; ++i) {
-            setInitialDistribution(privSaleWallet, 1200000, i * month);
+    function setAdvisorsRound() public onlyOwner {
+        require(
+            distributions[advisorsWallet].length == 0,
+            "Catched try to reinitialize already initialized round"
+        );
+        // 6% Advisors - cliff for 17 months, 4% unlocked each month within 25 months
+        for (uint8 i = 17; i < 42; ++i) {
+            setInitialDistribution(advisorsWallet, 240000, i * month);
         }
     }
 
-    function setPublicRound() internal onlyOwner {
-        // 2% Public sale - 20% unlocked at listing, 20% each month thereafter
-        for (uint8 i = 0; i < 5; ++i) {
-            setInitialDistribution(pubSaleWallet, 400000, i * month);
-        }
+    function setLiquidityRound() public onlyOwner {
+        require(
+            distributions[liquidityWallet].length == 0,
+            "Catched try to reinitialize already initialized round"
+        );
+        // 12% Liquidity - Fully unlocked
+        setInitialDistribution(liquidityWallet, 12000000, 0);
     }
 
-    function setTeamRound() internal onlyOwner {
-        // 25% Team - 100% locked for 7 month, 10% unlocked each month thereafter
-        for (uint8 i = 7; i < 17; ++i) {
-            setInitialDistribution(teamWallet, 2500000, i * month);
+    function setStrategicRound() public onlyOwner {
+        require(
+            distributions[strategicWallet].length == 0,
+            "Catched try to reinitialize already initialized round"
+        );
+        // 20% Strategic Reserve - cliff for 6 month, 2,85% unlocked each month within 35 months
+        uint256 amountEachRound = 570000;
+        for (uint8 i = 6; i < 40; ++i) {
+            setInitialDistribution(strategicWallet, amountEachRound, i * month);
         }
+        setInitialDistribution(strategicWallet, 20000000 - (amountEachRound * 34), 40 * month);
     }
 
-    function setAdvisorsRound() internal onlyOwner {
-        // 5% Advisors - 100% locked for 7 months, 10% unlocked each month thereafter
-        for (uint8 i = 7; i < 17; ++i) {
-            setInitialDistribution(advisorsWallet, 500000, i * month);
+    function setCommunityRound() public onlyOwner {
+        require(
+            distributions[communityWallet].length == 0,
+            "Catched try to reinitialize already initialized round"
+        );
+        // 21% Community / Ecosystem - 5% unlocked, 2,97% unlocked each month within 32 months
+        uint256 amountEachRound = 623700;
+        setInitialDistribution(communityWallet, 1050000, 0);
+        uint256 remainingForDist = 21000000 - 1050000;
+        for (uint8 i = 1; i < 32; ++i) {
+            setInitialDistribution(communityWallet, amountEachRound, i * month);
         }
-    }
-
-    function setLiquidityRound() internal onlyOwner {
-        // 20% Liquidity - Fully unlocked
-        setInitialDistribution(liquidityWallet, 20000000, 0);
-    }
-
-    function setOtherRound() internal onlyOwner {
-        // 32% marketing, staking rewards, airdrops, ambassador program - 10% unlocked, 5% unlocked each month.
-        setInitialDistribution(otherWallet, 10000000, 0);
-        for (uint8 i = 1; i < 17; ++i) {
-            setInitialDistribution(otherWallet, 5000000, i * month);
-        }
+        setInitialDistribution(communityWallet, remainingForDist - (amountEachRound * 31), 32 * month);
     }
 
     function setTokenAddress(address _tokenAddress)
@@ -118,6 +195,7 @@ contract CrodoDistributionContract is Pausable, Ownable {
         whenNotPaused
     {
         erc20 = ERC20(_tokenAddress);
+        decimals = erc20.decimals();
     }
 
     function safeGuardAllTokens(address _address)
