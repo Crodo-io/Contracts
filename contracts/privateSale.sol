@@ -30,6 +30,7 @@ contract CrodoPrivateSale is Ownable, Pausable {
     uint256 public totalMinBuyAllowed;
     uint256 public totalBought;
     uint256 public USDTPerToken;
+    uint256 public saleDecimals;
     uint48 public initReleaseDate;
     uint256 public latestRelease; // Time of the latest release
     uint48 public releaseInterval = 30 days;
@@ -43,12 +44,15 @@ contract CrodoPrivateSale is Ownable, Pausable {
         address _crodoToken,
         address _usdtAddress,
         uint256 _USDTPerToken,
-        uint48 _initReleaseDate
+        uint48 _initReleaseDate,
+        uint8 _totalReleases
     ) Ownable() {
         crodoToken = ERC20(_crodoToken);
+        saleDecimals = 10**crodoToken.decimals();
         usdtToken = ERC20(_usdtAddress);
         USDTPerToken = _USDTPerToken;
         initReleaseDate = _initReleaseDate;
+        totalReleases = _totalReleases;
     }
 
     function close() public whenNotPaused onlyOwner {
@@ -150,8 +154,7 @@ contract CrodoPrivateSale is Ownable, Pausable {
     {
         // Cover case 1
         require(
-            (totalBought + amount * (10**crodoToken.decimals())) <
-                contractBalance(),
+            (totalBought + amount * saleDecimals) <= contractBalance(),
             "Contract doesn't have requested amount of tokens left"
         );
 
@@ -181,43 +184,47 @@ contract CrodoPrivateSale is Ownable, Pausable {
         );
 
         usdtToken.transferFrom(msg.sender, address(this), usdtPrice);
-        participant.reserved += amount * (10**crodoToken.decimals());
-        totalBought += amount * (10**crodoToken.decimals());
+        participant.reserved += amount * saleDecimals;
+        totalBought += amount * saleDecimals;
         return amount;
     }
 
-    // Releases locked tokens to buyers, after which resets all contract state to zero
     function releaseTokens() external onlyOwner whenPaused returns (uint256) {
         require(
             initReleaseDate <= block.timestamp,
             "Initial release date hasn't passed yet"
         );
         require(
-            latestRelease + releaseInterval <= block.timestamp,
+            (initReleaseDate + currentRelease * releaseInterval) <=
+                block.timestamp,
             string(
                 abi.encodePacked(
-                    "Can only release tokens after interval has passed since last release, last release time: ",
-                    Strings.toString(latestRelease)
+                    "Can only release tokens after initial release date has passed and once "
+                    "in the release interval. inital date: ; release interval: ",
+                    Strings.toString(initReleaseDate),
+                    Strings.toString(releaseInterval)
                 )
             )
         );
 
         ++currentRelease;
-        latestRelease = block.timestamp;
         uint256 tokensSent = 0;
         for (uint32 i = 0; i < participantAddrs.length; ++i) {
             address participantAddr = participantAddrs[i];
             Participant storage participant = participants[participantAddr];
-            if (participant.reserved > 0) {
+            uint256 lockedTokensLeft = participant.reserved - participant.sent;
+            if (participant.reserved > 0 && (lockedTokensLeft > 0)) {
                 uint256 roundAmount = participant.reserved / totalReleases;
 
                 // If on the last release tokens don't round up after dividing,
+                // or locked tokens is less than calcualted amount to send,
                 // just send the whole remaining tokens
                 if (
-                    currentRelease >= totalReleases &&
-                    roundAmount != (participant.reserved - participant.sent)
+                    (currentRelease >= totalReleases &&
+                        roundAmount != lockedTokensLeft) ||
+                    (roundAmount > lockedTokensLeft)
                 ) {
-                    roundAmount = participant.reserved - participant.sent;
+                    roundAmount = lockedTokensLeft;
                 }
 
                 require(

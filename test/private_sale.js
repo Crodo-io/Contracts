@@ -11,6 +11,10 @@ function getTimestamp () {
     return Math.floor(Date.now() / 1000)
 }
 
+function cmpRanged (n, n1, range) {
+    return Math.abs(n - n1) <= range
+}
+
 contract("PrivateSale", (accounts) => {
     let crodoToken
     let usdtToken
@@ -18,6 +22,7 @@ contract("PrivateSale", (accounts) => {
     let usdtPrice
     let tokensForSale
     const owner = accounts[0]
+    const user1 = accounts[1]
     const crodoDecimals = 18
     const usdtDecimals = 6
 
@@ -26,6 +31,7 @@ contract("PrivateSale", (accounts) => {
 
     const releaseInterval = 2 * month
     const initRelease = getTimestamp() + 3 * month
+    const totalReleases = 23
 
     beforeEach(async () => {
         const snapshot = await timeMachine.takeSnapshot()
@@ -34,16 +40,17 @@ contract("PrivateSale", (accounts) => {
         crodoToken = await TestToken.new(crodoDecimals, owner, 0)
         usdtToken = await TestToken.new(usdtDecimals, owner, 0)
         usdtPrice = amountToLamports(0.15, usdtDecimals)
-        tokensForSale = amountToLamports(100000, crodoDecimals)
+        tokensForSale = 100000
 
         privateSale = await CrodoPrivateSale.new(
             crodoToken.address,
             usdtToken.address,
             usdtPrice,
-            initRelease
+            initRelease,
+            totalReleases
         )
         await privateSale.setReleaseInterval(releaseInterval)
-        await crodoToken.mint(privateSale.address, tokensForSale)
+        await crodoToken.mint(privateSale.address, amountToLamports(tokensForSale, crodoDecimals))
     })
 
     afterEach(async () => {
@@ -80,16 +87,19 @@ contract("PrivateSale", (accounts) => {
         })
     })
 
-    it("reserve and release 23 tokens", async () => {
+    it("reserve total of 46 tokens spread by 2 users", async () => {
         const lockingAmount = 23
         const usdtPrice = amountToLamports(0.15 * lockingAmount, usdtDecimals)
         await usdtToken.mint(owner, usdtPrice)
         await privateSale.addParticipant(owner, 1, 100)
         await usdtToken.approve(privateSale.address, usdtPrice)
 
-        const userUSDTBefore = Number(await usdtToken.balanceOf(owner))
-        await privateSale.lockTokens(lockingAmount)
+        await usdtToken.mint(user1, usdtPrice)
+        await privateSale.addParticipant(user1, 1, 100)
+        await usdtToken.approve(privateSale.address, usdtPrice, { from: user1 })
 
+        let userUSDTBefore = Number(await usdtToken.balanceOf(owner))
+        await privateSale.lockTokens(lockingAmount)
         assert.equal(
             Number(amountToLamports(lockingAmount, crodoDecimals)),
             Number(await privateSale.reservedBy(owner))
@@ -99,20 +109,72 @@ contract("PrivateSale", (accounts) => {
             Number(await usdtToken.balanceOf(owner))
         )
 
+        userUSDTBefore = Number(await usdtToken.balanceOf(user1))
+        await privateSale.lockTokens(lockingAmount, { from: user1 })
+        assert.equal(
+            Number(amountToLamports(lockingAmount, crodoDecimals)),
+            Number(await privateSale.reservedBy(user1))
+        )
+        assert.equal(
+            userUSDTBefore - usdtPrice,
+            Number(await usdtToken.balanceOf(user1))
+        )
+    })
+
+    it("Perform full cycle of test-private-sale among 2 users", async () => {
+        const lockingAmount = { }
+        lockingAmount[owner] = tokensForSale * 0.75
+        lockingAmount[user1] = tokensForSale * 0.25
+
+        let usdtPrice = amountToLamports(0.15 * lockingAmount[owner], usdtDecimals)
+        await usdtToken.mint(owner, usdtPrice)
+        await privateSale.addParticipant(owner, 1, lockingAmount[owner] + 1)
+        await usdtToken.approve(privateSale.address, usdtPrice)
+
+        usdtPrice = amountToLamports(0.15 * lockingAmount[user1], usdtDecimals)
+        await usdtToken.mint(user1, usdtPrice)
+        await privateSale.addParticipant(user1, 1, lockingAmount[user1] + 1)
+        await usdtToken.approve(privateSale.address, usdtPrice, { from: user1 })
+
+        await privateSale.lockTokens(lockingAmount[owner])
+        await privateSale.lockTokens(lockingAmount[user1], { from: user1 })
+
         await privateSale.close()
         await timeMachine.advanceBlockAndSetTime(initRelease + day)
 
+        for (let i = 1; i < totalReleases; ++i) {
+            await privateSale.releaseTokens()
+
+            Object.keys(lockingAmount).forEach(async addr => {
+                const target = Number(amountToLamports(lockingAmount[addr], crodoDecimals)) * (i / totalReleases)
+                const balance = Number(await crodoToken.balanceOf(addr))
+                // Due to division on types >8 bytes, either in contract or in javascript,
+                // small inpercisions are allowed, the only important thing, is that after the last
+                // release numbers must be exact.
+                if (!cmpRanged(target, balance, target * 0.001)) {
+                    assert.equal(
+                        target,
+                        balance
+                    )
+                }
+            })
+            await timeMachine.advanceTimeAndBlock(releaseInterval)
+        }
+
         await privateSale.releaseTokens()
+
+        let target = Number(amountToLamports(lockingAmount[owner], crodoDecimals))
+        let balance = Number(await crodoToken.balanceOf(owner))
         assert.equal(
-            Number(amountToLamports(lockingAmount, crodoDecimals)) * 0.1,
-            Number(await crodoToken.balanceOf(owner))
+            target,
+            balance
         )
 
-        await timeMachine.advanceTimeAndBlock(releaseInterval + day)
-        await privateSale.releaseTokens()
+        target = Number(amountToLamports(lockingAmount[user1], crodoDecimals))
+        balance = Number(await crodoToken.balanceOf(user1))
         assert.equal(
-            Number(amountToLamports(lockingAmount, crodoDecimals)) * 0.2,
-            Number(await crodoToken.balanceOf(owner))
+            target,
+            balance
         )
     })
 })

@@ -171,7 +171,11 @@ contract CrodoDistributionContract is Pausable, Ownable {
         for (uint8 i = 6; i < 40; ++i) {
             setInitialDistribution(strategicWallet, amountEachRound, i * month);
         }
-        setInitialDistribution(strategicWallet, 20000000 - (amountEachRound * 34), 40 * month);
+        setInitialDistribution(
+            strategicWallet,
+            20000000 - (amountEachRound * 34),
+            40 * month
+        );
     }
 
     function setCommunityRound() public onlyOwner {
@@ -186,7 +190,11 @@ contract CrodoDistributionContract is Pausable, Ownable {
         for (uint8 i = 1; i < 32; ++i) {
             setInitialDistribution(communityWallet, amountEachRound, i * month);
         }
-        setInitialDistribution(communityWallet, remainingForDist - (amountEachRound * 31), 32 * month);
+        setInitialDistribution(
+            communityWallet,
+            remainingForDist - (amountEachRound * 31),
+            32 * month
+        );
     }
 
     function setTokenAddress(address _tokenAddress)
@@ -195,7 +203,7 @@ contract CrodoDistributionContract is Pausable, Ownable {
         whenNotPaused
     {
         erc20 = ERC20(_tokenAddress);
-        decimals = 10 ** erc20.decimals();
+        decimals = 10**erc20.decimals();
     }
 
     function safeGuardAllTokens(address _address)
