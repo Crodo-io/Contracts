@@ -1,7 +1,8 @@
 const CrodoDistributionContract = artifacts.require("CrodoDistributionContract")
 const CrodoToken = artifacts.require("CrodoToken")
+const { getUnixDate } = require("./utils.js")
 
-const TGEDate = Math.floor(new Date(2022, 1, 30).getTime() / 1000) // TODO: Set correct TGEDate
+const TGEDate = getUnixDate(2022, 1, 30) // TODO: Set correct TGEDate
 
 // TODO: Set correct addresses
 const seedWallet = "0x72245A3E23E7F73e5eaD2857b990b74a27FB95d4"

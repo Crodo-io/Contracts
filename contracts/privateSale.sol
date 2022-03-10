@@ -8,7 +8,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
-contract CrodoPrivateSale is Ownable, Pausable {
+abstract contract BaseLimitedSale is Ownable, Pausable {
     using SafeMath for uint256;
 
     event ParticipantAdded(address participant);
@@ -245,4 +245,58 @@ contract CrodoPrivateSale is Ownable, Pausable {
     function pullUSDT(address receiver, uint256 amount) external onlyOwner {
         usdtToken.transfer(receiver, amount);
     }
+}
+
+contract CrodoSeedSale is BaseLimitedSale {
+    constructor(
+        address _crodoToken,
+        address _usdtAddress,
+        uint256 _USDTPerToken,
+        uint48 _initReleaseDate,
+        uint8 _totalReleases
+    )
+        BaseLimitedSale(
+            _crodoToken,
+            _usdtAddress,
+            _USDTPerToken,
+            _initReleaseDate,
+            _totalReleases
+        )
+    {}
+}
+
+contract CrodoPrivateSale is BaseLimitedSale {
+    constructor(
+        address _crodoToken,
+        address _usdtAddress,
+        uint256 _USDTPerToken,
+        uint48 _initReleaseDate,
+        uint8 _totalReleases
+    )
+        BaseLimitedSale(
+            _crodoToken,
+            _usdtAddress,
+            _USDTPerToken,
+            _initReleaseDate,
+            _totalReleases
+        )
+    {}
+}
+
+contract CrodoStrategicSale is BaseLimitedSale {
+    constructor(
+        address _crodoToken,
+        address _usdtAddress,
+        uint256 _USDTPerToken,
+        uint48 _initReleaseDate,
+        uint8 _totalReleases
+    )
+        BaseLimitedSale(
+            _crodoToken,
+            _usdtAddress,
+            _USDTPerToken,
+            _initReleaseDate,
+            _totalReleases
+        )
+    {}
 }

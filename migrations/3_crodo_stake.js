@@ -10,7 +10,7 @@ const year = month * 12
 const lockTimePeriodMin = month * 6
 const lockTimePeriodMax = year * 4
 
-module.exports = function (deployer) {
-    CrodoToken.deployed()
-        .then(() => deployer.deploy(CRDStake, CrodoToken.address, lockTimePeriodMin, lockTimePeriodMax))
+module.exports = async function (deployer) {
+    const token = await CrodoToken.deployed()
+    await deployer.deploy(CRDStake, token.address, lockTimePeriodMin, lockTimePeriodMax)
 }
