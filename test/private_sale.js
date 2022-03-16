@@ -176,5 +176,33 @@ contract("PrivateSale", (accounts) => {
             target,
             balance
         )
+
+        // Take USDT from contract
+        const balanceBefore = Number(await usdtToken.balanceOf(owner))
+        const contractUSDT = Number(await usdtToken.balanceOf(privateSale.address))
+        await privateSale.pullUSDT(owner, contractUSDT)
+        const balanceAfter = Number(await usdtToken.balanceOf(owner))
+
+        assert.equal(
+            balanceAfter,
+            balanceBefore + contractUSDT
+        )
+        assert.equal(
+            Number(await usdtToken.balanceOf(privateSale.address)),
+            0
+        )
+    })
+
+    it("test admin functions", async () => {
+        const userReserve = 30
+        await privateSale.addParticipant(user1, 1, 49)
+        await privateSale.lockForParticipant(user1, userReserve)
+        const participant = await privateSale.getParticipant(user1)
+        const reserved = Number(participant[2])
+
+        assert.equal(
+            reserved,
+            amountToLamports(userReserve, crodoDecimals)
+        )
     })
 })

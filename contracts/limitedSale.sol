@@ -242,8 +242,39 @@ abstract contract BaseLimitedSale is Ownable, Pausable {
         return tokensSent;
     }
 
+    /*
+     * Owner-only functions
+     */
+
     function pullUSDT(address receiver, uint256 amount) external onlyOwner {
         usdtToken.transfer(receiver, amount);
+    }
+
+    function lockForParticipant(address _participant, uint256 amount)
+        external
+        onlyOwner
+        returns (uint256)
+    {
+        require(
+            (totalBought + amount * saleDecimals) <= contractBalance(),
+            "Contract doesn't have requested amount of tokens left"
+        );
+
+        Participant storage participant = participants[_participant];
+
+        require(
+            participant.reserved + amount < participant.maxBuyAllowed,
+            "User tried to exceed their buy-high limit"
+        );
+
+        require(
+            participant.reserved + amount > participant.minBuyAllowed,
+            "User tried to purchase tokens below their minimum limit"
+        );
+
+        participant.reserved += amount * saleDecimals;
+        totalBought += amount * saleDecimals;
+        return amount;
     }
 }
 
