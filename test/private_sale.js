@@ -136,8 +136,12 @@ contract("PrivateSale", (accounts) => {
         await privateSale.addParticipant(user1, 1, lockingAmount[user1] + 1)
         await usdtToken.approve(privateSale.address, usdtPrice, { from: user1 })
 
-        await privateSale.lockTokens(lockingAmount[owner])
-        await privateSale.lockTokens(lockingAmount[user1], { from: user1 })
+        let firstLock = lockingAmount[owner] - 100
+        await privateSale.lockTokens(firstLock)
+        await privateSale.lockTokens(lockingAmount[owner] - firstLock)
+        firstLock = lockingAmount[user1] - 100
+        await privateSale.lockTokens(firstLock, { from: user1 })
+        await privateSale.lockTokens(lockingAmount[user1] - firstLock, { from: user1 })
 
         await privateSale.close()
         await timeMachine.advanceBlockAndSetTime(initRelease + day)
@@ -196,12 +200,12 @@ contract("PrivateSale", (accounts) => {
     it("test admin functions", async () => {
         const userReserve = 30
         await privateSale.addParticipant(user1, 1, 49)
-        await privateSale.lockForParticipant(user1, userReserve)
-        const participant = await privateSale.getParticipant(user1)
-        const reserved = Number(participant[2])
+        let firstReserve = userReserve - 15
+        await privateSale.lockForParticipant(user1, firstReserve)
+        await privateSale.lockForParticipant(user1, userReserve - firstReserve)
 
         assert.equal(
-            reserved,
+            Number(await privateSale.reservedBy(user1)),
             amountToLamports(userReserve, crodoDecimals)
         )
     })

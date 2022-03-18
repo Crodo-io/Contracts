@@ -60,7 +60,7 @@ abstract contract BaseLimitedSale is Ownable, Pausable {
     }
 
     function reservedBy(address participant) public view returns (uint256) {
-        return participants[participant].reserved;
+        return participants[participant].reserved * saleDecimals;
     }
 
     function setReleaseInterval(uint48 _interval)
@@ -162,13 +162,13 @@ abstract contract BaseLimitedSale is Ownable, Pausable {
 
         // Cover case 2
         require(
-            participant.reserved + amount < participant.maxBuyAllowed,
+            participant.reserved + amount <= participant.maxBuyAllowed,
             "User tried to exceed their buy-high limit"
         );
 
         // Cover case 3
         require(
-            participant.reserved + amount > participant.minBuyAllowed,
+            participant.reserved + amount >= participant.minBuyAllowed,
             "User tried to purchase tokens below their minimum limit"
         );
 
@@ -184,7 +184,7 @@ abstract contract BaseLimitedSale is Ownable, Pausable {
         );
 
         usdtToken.transferFrom(msg.sender, address(this), usdtPrice);
-        participant.reserved += amount * saleDecimals;
+        participant.reserved += amount;
         totalBought += amount * saleDecimals;
         return amount;
     }
@@ -212,9 +212,9 @@ abstract contract BaseLimitedSale is Ownable, Pausable {
         for (uint32 i = 0; i < participantAddrs.length; ++i) {
             address participantAddr = participantAddrs[i];
             Participant storage participant = participants[participantAddr];
-            uint256 lockedTokensLeft = participant.reserved - participant.sent;
-            if (participant.reserved > 0 && (lockedTokensLeft > 0)) {
-                uint256 roundAmount = participant.reserved / totalReleases;
+            uint256 lockedTokensLeft = (participant.reserved * saleDecimals) - participant.sent;
+            if ((participant.reserved * saleDecimals) > 0 && (lockedTokensLeft > 0)) {
+                uint256 roundAmount = (participant.reserved * saleDecimals) / totalReleases;
 
                 // If on the last release tokens don't round up after dividing,
                 // or locked tokens is less than calcualted amount to send,
@@ -272,7 +272,7 @@ abstract contract BaseLimitedSale is Ownable, Pausable {
             "User tried to purchase tokens below their minimum limit"
         );
 
-        participant.reserved += amount * saleDecimals;
+        participant.reserved += amount;
         totalBought += amount * saleDecimals;
         return amount;
     }
