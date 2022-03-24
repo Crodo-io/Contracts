@@ -46,7 +46,7 @@ contract CRDStake is AccessControl, ReentrancyGuard {
         // the difference between `stakeTime` is that `stakedSince` only updates
         // when user withdraws tokens from the stake pull.
         uint48 stakedSince;
-        uint160 stakeAmount;
+        uint256 stakeAmount;
         uint256 accumulatedRewards;
     }
 
@@ -507,6 +507,17 @@ contract CRDStake is AccessControl, ReentrancyGuard {
 
         emit Claimed(msg.sender, rewardToken, earnedRewardTokens);
         return earnedRewardTokens;
+    }
+
+    function restakeRewards() public returns (uint256) {
+        require(stakingToken == rewardToken, "Can't restake rewards, pool has different stake and reward tokens");
+
+        User storage user = userMap[msg.sender];
+        user.stakeAmount += getEarnedRewardTokens(msg.sender);
+        user.stakeTime = toUint48(block.timestamp); // will reset userClaimableRewards to 0
+        user.accumulatedRewards = 0;
+
+        return user.stakeAmount;
     }
 
     function stake(uint256 _amount, uint48 _lockTime)
