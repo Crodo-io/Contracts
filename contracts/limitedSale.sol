@@ -5,10 +5,9 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
-abstract contract BaseLimitedSale is Ownable, Pausable {
+abstract contract BaseLimitedSale is Ownable {
     using SafeMath for uint256;
 
     event ParticipantAdded(address participant);
@@ -55,10 +54,6 @@ abstract contract BaseLimitedSale is Ownable, Pausable {
         totalReleases = _totalReleases;
     }
 
-    function close() public whenNotPaused onlyOwner {
-        _pause();
-    }
-
     function reservedBy(address participant) public view returns (uint256) {
         return participants[participant].reserved * saleDecimals;
     }
@@ -66,7 +61,6 @@ abstract contract BaseLimitedSale is Ownable, Pausable {
     function setReleaseInterval(uint48 _interval)
         external
         onlyOwner
-        whenNotPaused
     {
         releaseInterval = _interval;
     }
@@ -98,7 +92,7 @@ abstract contract BaseLimitedSale is Ownable, Pausable {
         address _participant,
         uint256 minBuyAllowed,
         uint256 maxBuyAllowed
-    ) external onlyOwner whenNotPaused {
+    ) external onlyOwner {
         Participant storage participant = participants[_participant];
         participant.minBuyAllowed = minBuyAllowed;
         participant.maxBuyAllowed = maxBuyAllowed;
@@ -112,7 +106,6 @@ abstract contract BaseLimitedSale is Ownable, Pausable {
     function removeParticipant(address _participant)
         external
         onlyOwner
-        whenNotPaused
     {
         Participant memory participant = participants[_participant];
 
@@ -149,7 +142,6 @@ abstract contract BaseLimitedSale is Ownable, Pausable {
     // 3) User tries to purchase tokens below their min limit
     function lockTokens(uint256 amount)
         external
-        whenNotPaused
         returns (uint256)
     {
         // Cover case 1
@@ -189,7 +181,7 @@ abstract contract BaseLimitedSale is Ownable, Pausable {
         return amount;
     }
 
-    function releaseTokens() external onlyOwner whenPaused returns (uint256) {
+    function releaseTokens() external returns (uint256) {
         require(
             initReleaseDate <= block.timestamp,
             "Initial release date hasn't passed yet"
