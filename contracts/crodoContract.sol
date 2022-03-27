@@ -510,7 +510,10 @@ contract CRDStake is AccessControl, ReentrancyGuard {
     }
 
     function restakeRewards() public returns (uint256) {
-        require(stakingToken == rewardToken, "Can't restake rewards, pool has different stake and reward tokens");
+        require(
+            stakingToken == rewardToken,
+            "Can't restake rewards, pool has different stake and reward tokens"
+        );
 
         User storage user = userMap[msg.sender];
         user.stakeAmount += getEarnedRewardTokens(msg.sender);

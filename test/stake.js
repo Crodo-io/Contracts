@@ -62,8 +62,8 @@ contract("CrodoToken", (accounts) => {
             stakeAmount,
             Number(await stake.stakeAmount(owner))
         )
-        
-        let firstAwait = lockTime / 2
+
+        const firstAwait = lockTime / 2
         await timeMachine.advanceTimeAndBlock(firstAwait)
         let target = stakeAmount * firstAwait / rewardFactor
         let current = Number(await stake.getEarnedRewardTokens(owner))
@@ -75,7 +75,7 @@ contract("CrodoToken", (accounts) => {
         }
 
         await timeMachine.advanceTimeAndBlock(lockTime - firstAwait)
-        target = current + stakeAmount * (lockTime - firstAwait) / rewardFactor 
+        target = current + stakeAmount * (lockTime - firstAwait) / rewardFactor
         current = Number(await stake.getEarnedRewardTokens(owner))
         if (!cmpRanged(target, current, target * 0.001)) {
             assert.equal(
@@ -114,15 +114,15 @@ contract("CrodoToken", (accounts) => {
         await stakeToken.approve(stake.address, stakeAmount)
         await stake.stake(stakeAmount, lockTime)
 
-        let firstAwait = lockTime / 2
+        const firstAwait = lockTime / 2
         await timeMachine.advanceTimeAndBlock(firstAwait)
 
-        let earnedBeforeRestake = Number(await stake.getEarnedRewardTokens(owner))
-        let newStakeAmount = Number(stakeAmount) + earnedBeforeRestake
+        const earnedBeforeRestake = Number(await stake.getEarnedRewardTokens(owner))
+        const newStakeAmount = Number(stakeAmount) + earnedBeforeRestake
         await stake.restakeRewards()
         await timeMachine.advanceTimeAndBlock(lockTime - firstAwait)
 
-        target = newStakeAmount * (lockTime - firstAwait) / rewardFactor 
+        target = newStakeAmount * (lockTime - firstAwait) / rewardFactor
         current = Number(await stake.getEarnedRewardTokens(owner))
         if (!cmpRanged(target, current, target * 0.001)) {
             assert.equal(

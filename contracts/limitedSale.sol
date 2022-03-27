@@ -58,10 +58,7 @@ abstract contract BaseLimitedSale is Ownable {
         return participants[participant].reserved * saleDecimals;
     }
 
-    function setReleaseInterval(uint48 _interval)
-        external
-        onlyOwner
-    {
+    function setReleaseInterval(uint48 _interval) external onlyOwner {
         releaseInterval = _interval;
     }
 
@@ -103,10 +100,7 @@ abstract contract BaseLimitedSale is Ownable {
         emit ParticipantAdded(_participant);
     }
 
-    function removeParticipant(address _participant)
-        external
-        onlyOwner
-    {
+    function removeParticipant(address _participant) external onlyOwner {
         Participant memory participant = participants[_participant];
 
         require(
@@ -140,10 +134,7 @@ abstract contract BaseLimitedSale is Ownable {
     // 1) Our contract doesn't have requested amount of tokens left
     // 2) User tries to exceed their buy limit
     // 3) User tries to purchase tokens below their min limit
-    function lockTokens(uint256 amount)
-        external
-        returns (uint256)
-    {
+    function lockTokens(uint256 amount) external returns (uint256) {
         // Cover case 1
         require(
             (totalBought + amount * saleDecimals) <= contractBalance(),
@@ -192,9 +183,8 @@ abstract contract BaseLimitedSale is Ownable {
             string(
                 abi.encodePacked(
                     "Can only release tokens after initial release date has passed and once "
-                    "in the release interval. inital date: ; release interval: ",
-                    Strings.toString(initReleaseDate),
-                    Strings.toString(releaseInterval)
+                    "in the release interval. inital date: ",
+                    Strings.toString(initReleaseDate)
                 )
             )
         );
@@ -204,9 +194,14 @@ abstract contract BaseLimitedSale is Ownable {
         for (uint32 i = 0; i < participantAddrs.length; ++i) {
             address participantAddr = participantAddrs[i];
             Participant storage participant = participants[participantAddr];
-            uint256 lockedTokensLeft = (participant.reserved * saleDecimals) - participant.sent;
-            if ((participant.reserved * saleDecimals) > 0 && (lockedTokensLeft > 0)) {
-                uint256 roundAmount = (participant.reserved * saleDecimals) / totalReleases;
+            uint256 lockedTokensLeft = (participant.reserved * saleDecimals) -
+                participant.sent;
+            if (
+                (participant.reserved * saleDecimals) > 0 &&
+                (lockedTokensLeft > 0)
+            ) {
+                uint256 roundAmount = (participant.reserved * saleDecimals) /
+                    totalReleases;
 
                 // If on the last release tokens don't round up after dividing,
                 // or locked tokens is less than calcualted amount to send,
