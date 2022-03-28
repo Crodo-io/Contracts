@@ -7,6 +7,7 @@
     "build": "truffle compile",
     "deploy": "truffle deploy --reset",
     "deploy:testnet": "truffle deploy --network testnet --reset",
+    "deploy:local_testnet": "truffle deploy --network local_testnet --reset",
     "deploy:mainnet": "truffle deploy --network mainnet --reset",
     "coverage": "truffle run coverage",
     "eslint": "eslint --fix test/ migrations/",

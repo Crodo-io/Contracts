@@ -29,26 +29,38 @@ contract CrodoDistributionContract is Pausable, Ownable {
     using SafeMath for uint256;
 
     uint256 public decimals;
-    address[] public tokenOwners; /* Tracks distributions mapping (iterable) */
     uint48 public TGEDate = 0; /* Date From where the distribution starts (TGE) */
     uint256 public constant month = 30 days;
     uint256 public constant year = 365 days;
     uint256 public lastDateDistribution = 0;
 
     // All these addresses must be unique
-    address public seedWallet;
-    address public privSaleWallet;
-    address public strategicSaleWallet;
-    address public pubSaleWallet;
-    address public teamWallet;
-    address public advisorsWallet;
-    address public liquidityWallet;
-    address public strategicWallet;
-    address public communityWallet;
+    address[] public seedWallet;
+    address[] public privSaleWallet;
+    address[] public strategicSaleWallet;
+    address[] public pubSaleWallet;
+    address[] public teamWallet;
+    address[] public teamWallets = [
+        0xcF528152C7619E23d0c6A16de75E6B30A45Bf502,
+        0x72245A3E23E7F73e5eaD2857b990b74a27FB95d4,
+        0xC1A14B3CC70d3a1FD4f8e45FeA6B0c755f5a3D4A,
+        0xC6F8fa17836fEebBD836f7F5986942e8d102B683
+    ]; // TODO: Change these to correct addresses
+    address[] public advisorsWallet;
+    address[] public liquidityWallet;
+    address[] public strategicWallet;
+    address[] public communityWallet;
 
-    mapping(address => DistributionStep[]) public distributions; /* Distribution object */
+    uint256 private currentCategory;
+    /* Distribution object */
+    mapping(uint256 => DistributionCategory) private distributionCategories;
 
     ERC20 public erc20;
+
+    struct DistributionCategory {
+        address[] destinations;
+        DistributionStep[] distributions;
+    }
 
     struct DistributionStep {
         uint256 amountAllocated;
@@ -58,21 +70,19 @@ contract CrodoDistributionContract is Pausable, Ownable {
     }
 
     constructor(
-        address _seedWallet,
-        address _privSaleWallet,
-        address _strategicSaleWallet,
-        address _pubSaleWallet,
-        address _teamWallet,
-        address _advisorsWallet,
-        address _liquidityWallet,
-        address _strategicWallet,
-        address _communityWallet
+        address[] memory _seedWallet,
+        address[] memory _privSaleWallet,
+        address[] memory _strategicSaleWallet,
+        address[] memory _pubSaleWallet,
+        address[] memory _advisorsWallet,
+        address[] memory _liquidityWallet,
+        address[] memory _strategicWallet,
+        address[] memory _communityWallet
     ) Ownable() Pausable() {
         seedWallet = _seedWallet;
         privSaleWallet = _privSaleWallet;
         strategicSaleWallet = _strategicSaleWallet;
         pubSaleWallet = _pubSaleWallet;
-        teamWallet = _teamWallet;
         advisorsWallet = _advisorsWallet;
         liquidityWallet = _liquidityWallet;
         strategicWallet = _strategicWallet;
@@ -92,109 +102,99 @@ contract CrodoDistributionContract is Pausable, Ownable {
     }
 
     function setSeedRound() public onlyOwner {
-        require(
-            distributions[seedWallet].length == 0,
-            "Catched try to reinitialize already initialized round"
-        );
         // 6% Seed - cliff for 6 month, 3.7% unlocked each month within 27 months
         // The locking and vesting is done in seed sale contract.
-        setInitialDistribution(seedWallet, 6000000, 0);
+        initializeDistributionCategory(currentCategory, seedWallet);
+        addDistributionToCategory(currentCategory, 6000000, 0);
+        ++currentCategory;
     }
 
     function setPrivateRound() public onlyOwner {
-        require(
-            distributions[privSaleWallet].length == 0,
-            "Catched try to reinitialize already initialized round"
-        );
         // 8% Private sale - cliff for 3 month, 3,85% unlocked each month within 26 months
         // The locking and vesting is done in private sale contract.
-        setInitialDistribution(privSaleWallet, 8000000, 0);
+        initializeDistributionCategory(currentCategory, privSaleWallet);
+        addDistributionToCategory(currentCategory, 8000000, 0);
+        ++currentCategory;
     }
 
     function setStrategicSaleRound() public onlyOwner {
-        require(
-            distributions[strategicSaleWallet].length == 0,
-            "Catched try to reinitialize already initialized round"
-        );
         // 8% Strategic sale - cliff for 3 month, 4,17% unlocked each month within 24 months
         // The locking and vesting is done in strategic sale contract.
-        setInitialDistribution(strategicSaleWallet, 8000000, 0);
+        initializeDistributionCategory(currentCategory, strategicSaleWallet);
+        addDistributionToCategory(currentCategory, 8000000, 0);
+        ++currentCategory;
     }
 
     function setPublicRound() public onlyOwner {
-        require(
-            distributions[pubSaleWallet].length == 0,
-            "Catched try to reinitialize already initialized round"
-        );
         // 4% Public sale - 12% unlocked, cliff for 3 month, 17,6% unlocked each month within 5 months
-        setInitialDistribution(pubSaleWallet, 4000000, 0);
+        initializeDistributionCategory(currentCategory, pubSaleWallet);
+        addDistributionToCategory(currentCategory, 4000000, 0);
+        ++currentCategory;
     }
 
     function setTeamRound() public onlyOwner {
-        require(
-            distributions[teamWallet].length == 0,
-            "Catched try to reinitialize already initialized round"
-        );
         // 15% Team - cliff for 17 months, 4% unlocked each month within 25 months
+        initializeDistributionCategory(currentCategory, teamWallets);
         for (uint8 i = 17; i < 42; ++i) {
-            setInitialDistribution(teamWallet, 600000, i * month);
+            addDistributionToCategory(currentCategory, 600000, i * month);
         }
+        ++currentCategory;
     }
 
     function setAdvisorsRound() public onlyOwner {
-        require(
-            distributions[advisorsWallet].length == 0,
-            "Catched try to reinitialize already initialized round"
-        );
         // 6% Advisors - cliff for 17 months, 4% unlocked each month within 25 months
+        initializeDistributionCategory(currentCategory, advisorsWallet);
         for (uint8 i = 17; i < 42; ++i) {
-            setInitialDistribution(advisorsWallet, 240000, i * month);
+            addDistributionToCategory(currentCategory, 240000, i * month);
         }
+        ++currentCategory;
     }
 
     function setLiquidityRound() public onlyOwner {
-        require(
-            distributions[liquidityWallet].length == 0,
-            "Catched try to reinitialize already initialized round"
-        );
         // 12% Liquidity - Fully unlocked
-        setInitialDistribution(liquidityWallet, 12000000, 0);
+        initializeDistributionCategory(currentCategory, liquidityWallet);
+        addDistributionToCategory(currentCategory, 12000000, 0);
+        ++currentCategory;
     }
 
     function setStrategicRound() public onlyOwner {
-        require(
-            distributions[strategicWallet].length == 0,
-            "Catched try to reinitialize already initialized round"
-        );
         // 20% Strategic Reserve - cliff for 6 month, 2,85% unlocked each month within 35 months
+        initializeDistributionCategory(currentCategory, strategicWallet);
         uint256 amountEachRound = 570000;
         for (uint8 i = 6; i < 40; ++i) {
-            setInitialDistribution(strategicWallet, amountEachRound, i * month);
+            addDistributionToCategory(
+                currentCategory,
+                amountEachRound,
+                i * month
+            );
         }
-        setInitialDistribution(
-            strategicWallet,
+        addDistributionToCategory(
+            currentCategory,
             20000000 - (amountEachRound * 34),
             40 * month
         );
+        ++currentCategory;
     }
 
     function setCommunityRound() public onlyOwner {
-        require(
-            distributions[communityWallet].length == 0,
-            "Catched try to reinitialize already initialized round"
-        );
         // 21% Community / Ecosystem - 5% unlocked, 2,97% unlocked each month within 32 months
+        initializeDistributionCategory(currentCategory, communityWallet);
         uint256 amountEachRound = 623700;
-        setInitialDistribution(communityWallet, 1050000, 0);
+        addDistributionToCategory(currentCategory, 1050000, 0);
         uint256 remainingForDist = 21000000 - 1050000;
         for (uint8 i = 1; i < 32; ++i) {
-            setInitialDistribution(communityWallet, amountEachRound, i * month);
+            addDistributionToCategory(
+                currentCategory,
+                amountEachRound,
+                i * month
+            );
         }
-        setInitialDistribution(
-            communityWallet,
+        addDistributionToCategory(
+            currentCategory,
             remainingForDist - (amountEachRound * 31),
             32 * month
         );
+        ++currentCategory;
     }
 
     function setTokenAddress(address _tokenAddress)
@@ -238,10 +238,10 @@ contract CrodoDistributionContract is Pausable, Ownable {
             "Can only be called once a day"
         );
         lastDateDistribution = block.timestamp;
-        /* Go thru all tokenOwners */
-        for (uint256 i = 0; i < tokenOwners.length; i++) {
+        for (uint256 i = 0; i < currentCategory; i++) {
             /* Get Address Distribution */
-            DistributionStep[] memory d = distributions[tokenOwners[i]];
+            DistributionCategory storage category = distributionCategories[i];
+            DistributionStep[] storage d = category.distributions;
             /* Go thru all distributions array */
             for (uint256 j = 0; j < d.length; j++) {
                 /* If lock time has passed and address didn't take all the tokens already */
@@ -250,47 +250,42 @@ contract CrodoDistributionContract is Pausable, Ownable {
                     (d[j].currentAllocated > 0)
                 ) {
                     uint256 sendingAmount = d[j].currentAllocated;
-                    distributions[tokenOwners[i]][j]
-                        .currentAllocated = distributions[tokenOwners[i]][j]
-                        .currentAllocated
-                        .sub(sendingAmount);
-                    distributions[tokenOwners[i]][j].amountSent = distributions[
-                        tokenOwners[i]
-                    ][j].amountSent.add(sendingAmount);
-                    require(erc20.transfer(tokenOwners[i], sendingAmount));
+                    uint256 amountEach = sendingAmount /
+                        category.destinations.length;
+                    for (uint32 t = 0; t < category.destinations.length; t++) {
+                        require(
+                            erc20.transfer(category.destinations[t], amountEach)
+                        );
+                    }
+                    d[j].currentAllocated = d[j].currentAllocated.sub(
+                        sendingAmount
+                    );
+                    d[j].amountSent = d[j].amountSent.add(sendingAmount);
                 }
             }
         }
     }
 
-    function setInitialDistribution(
-        address _address,
+    function initializeDistributionCategory(
+        uint256 _category,
+        address[] memory _destinations
+    ) internal onlyOwner whenNotPaused {
+        distributionCategories[_category].destinations = _destinations;
+    }
+
+    function addDistributionToCategory(
+        uint256 _category,
         uint256 _tokenAmount,
         uint256 _unlockDays
     ) internal onlyOwner whenNotPaused {
-        /* Add tokenOwner to Eachable Mapping */
-        bool isAddressPresent = false;
-
-        /* Verify if tokenOwner was already added */
-        for (uint256 i = 0; i < tokenOwners.length; i++) {
-            if (tokenOwners[i] == _address) {
-                isAddressPresent = true;
-                break;
-            }
-        }
         /* Create DistributionStep Object */
-        DistributionStep memory distributionStep = DistributionStep(
+        DistributionStep memory step = DistributionStep(
             _tokenAmount * decimals,
             _tokenAmount * decimals,
             _unlockDays,
             0
         );
         /* Attach */
-        distributions[_address].push(distributionStep);
-
-        /* If Address not present in array of iterable token owners */
-        if (!isAddressPresent) {
-            tokenOwners.push(_address);
-        }
+        distributionCategories[_category].distributions.push(step);
     }
 }

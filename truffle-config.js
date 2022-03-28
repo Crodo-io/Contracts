@@ -6,7 +6,7 @@ const TestRPC = require('ganache-cli')
 module.exports = {
     networks: {
         development: {
-            provider: TestRPC.provider(),
+            provider: TestRPC.provider( { gasLimit: 0xff6691b7 }),
             network_id: '*'
         },
         testnet: {
@@ -21,6 +21,20 @@ module.exports = {
             port: 8545,
             gas: 20000000,
             gasPrice: 10000000000000
+        },
+        local_testnet: {
+            provider: function () {
+                let w = new HDWalletProvider(config.get('testnet-local.truffle.privateKey'), config.get('testnet-local.blockchain.rpc'))
+                let nonceTracker = new NonceTrackerSubprovider()
+                w.engine._providers.unshift(nonceTracker)
+                nonceTracker.setEngine(w.engine)
+                return w
+            },
+            network_id: config.get('testnet-local.blockchain.networkId'),
+            port: 8545,
+            gas: 20000000,
+            gasPrice: 10000000000000,
+            timeoutBlocks: 10000
         },
         mainnet: {
             provider: function () {

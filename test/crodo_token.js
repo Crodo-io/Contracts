@@ -19,11 +19,17 @@ contract("CrodoToken", (accounts) => {
     const privSaleWallet = accounts[1]
     const strategicSaleWallet = accounts[2]
     const pubSaleWallet = accounts[3]
-    const teamWallet = accounts[4]
     const advisorsWallet = accounts[5]
     const liquidityWallet = accounts[6]
     const strategicWallet = accounts[7]
     const communityWallet = accounts[8]
+
+    const teamWallets = [
+        "0xcF528152C7619E23d0c6A16de75E6B30A45Bf502",
+        "0x72245A3E23E7F73e5eaD2857b990b74a27FB95d4",
+        "0xC1A14B3CC70d3a1FD4f8e45FeA6B0c755f5a3D4A",
+        "0xC6F8fa17836fEebBD836f7F5986942e8d102B683"
+    ]
 
     const day = 60 * 60 * 24
     const month = day * 30
@@ -31,7 +37,7 @@ contract("CrodoToken", (accounts) => {
     let crodoDecimals
 
     const releaseWallets = [
-        seedWallet, privSaleWallet, strategicSaleWallet, pubSaleWallet, teamWallet,
+        seedWallet, privSaleWallet, strategicSaleWallet, pubSaleWallet, teamWallets,
         advisorsWallet, liquidityWallet, strategicWallet, communityWallet
     ]
     /*
@@ -60,32 +66,32 @@ contract("CrodoToken", (accounts) => {
         [6000000, 8000000, 8000000, 4000000, 0, 0, 12000000, 5130000, 9781800],
         [6000000, 8000000, 8000000, 4000000, 0, 0, 12000000, 5700000, 10405500],
         [6000000, 8000000, 8000000, 4000000, 0, 0, 12000000, 6270000, 11029200],
-        [6000000, 8000000, 8000000, 4000000, 600000, 240000, 12000000, 6840000, 11652900],
-        [6000000, 8000000, 8000000, 4000000, 1200000, 480000, 12000000, 7410000, 12276600],
-        [6000000, 8000000, 8000000, 4000000, 1800000, 720000, 12000000, 7980000, 12900300],
-        [6000000, 8000000, 8000000, 4000000, 2400000, 960000, 12000000, 8550000, 13524000],
-        [6000000, 8000000, 8000000, 4000000, 3000000, 1200000, 12000000, 9120000, 14147700],
-        [6000000, 8000000, 8000000, 4000000, 3600000, 1440000, 12000000, 9690000, 14771400],
-        [6000000, 8000000, 8000000, 4000000, 4200000, 1680000, 12000000, 10260000, 15395100],
-        [6000000, 8000000, 8000000, 4000000, 4800000, 1920000, 12000000, 10830000, 16018800],
-        [6000000, 8000000, 8000000, 4000000, 5400000, 2160000, 12000000, 11400000, 16642500],
-        [6000000, 8000000, 8000000, 4000000, 6000000, 2400000, 12000000, 11970000, 17266200],
-        [6000000, 8000000, 8000000, 4000000, 6600000, 2640000, 12000000, 12540000, 17889900],
-        [6000000, 8000000, 8000000, 4000000, 7200000, 2880000, 12000000, 13110000, 18513600],
-        [6000000, 8000000, 8000000, 4000000, 7800000, 3120000, 12000000, 13680000, 19137300],
-        [6000000, 8000000, 8000000, 4000000, 8400000, 3360000, 12000000, 14250000, 19761000],
-        [6000000, 8000000, 8000000, 4000000, 9000000, 3600000, 12000000, 14820000, 20384700],
-        [6000000, 8000000, 8000000, 4000000, 9600000, 3840000, 12000000, 15390000, 21000000],
-        [6000000, 8000000, 8000000, 4000000, 10200000, 4080000, 12000000, 15960000, 21000000],
-        [6000000, 8000000, 8000000, 4000000, 10800000, 4320000, 12000000, 16530000, 21000000],
-        [6000000, 8000000, 8000000, 4000000, 11400000, 4560000, 12000000, 17100000, 21000000],
-        [6000000, 8000000, 8000000, 4000000, 12000000, 4800000, 12000000, 17670000, 21000000],
-        [6000000, 8000000, 8000000, 4000000, 12600000, 5040000, 12000000, 18240000, 21000000],
-        [6000000, 8000000, 8000000, 4000000, 13200000, 5280000, 12000000, 18810000, 21000000],
-        [6000000, 8000000, 8000000, 4000000, 13800000, 5520000, 12000000, 19380000, 21000000],
-        [6000000, 8000000, 8000000, 4000000, 14400000, 5760000, 12000000, 20000000, 21000000],
-        [6000000, 8000000, 8000000, 4000000, 15000000, 6000000, 12000000, 20000000, 21000000],
-        [6000000, 8000000, 8000000, 4000000, 15000000, 6000000, 12000000, 20000000, 21000000]
+        [6000000, 8000000, 8000000, 4000000, 600000 / teamWallets.length, 240000, 12000000, 6840000, 11652900],
+        [6000000, 8000000, 8000000, 4000000, 1200000 / teamWallets.length, 480000, 12000000, 7410000, 12276600],
+        [6000000, 8000000, 8000000, 4000000, 1800000 / teamWallets.length, 720000, 12000000, 7980000, 12900300],
+        [6000000, 8000000, 8000000, 4000000, 2400000 / teamWallets.length, 960000, 12000000, 8550000, 13524000],
+        [6000000, 8000000, 8000000, 4000000, 3000000 / teamWallets.length, 1200000, 12000000, 9120000, 14147700],
+        [6000000, 8000000, 8000000, 4000000, 3600000 / teamWallets.length, 1440000, 12000000, 9690000, 14771400],
+        [6000000, 8000000, 8000000, 4000000, 4200000 / teamWallets.length, 1680000, 12000000, 10260000, 15395100],
+        [6000000, 8000000, 8000000, 4000000, 4800000 / teamWallets.length, 1920000, 12000000, 10830000, 16018800],
+        [6000000, 8000000, 8000000, 4000000, 5400000 / teamWallets.length, 2160000, 12000000, 11400000, 16642500],
+        [6000000, 8000000, 8000000, 4000000, 6000000 / teamWallets.length, 2400000, 12000000, 11970000, 17266200],
+        [6000000, 8000000, 8000000, 4000000, 6600000 / teamWallets.length, 2640000, 12000000, 12540000, 17889900],
+        [6000000, 8000000, 8000000, 4000000, 7200000 / teamWallets.length, 2880000, 12000000, 13110000, 18513600],
+        [6000000, 8000000, 8000000, 4000000, 7800000 / teamWallets.length, 3120000, 12000000, 13680000, 19137300],
+        [6000000, 8000000, 8000000, 4000000, 8400000 / teamWallets.length, 3360000, 12000000, 14250000, 19761000],
+        [6000000, 8000000, 8000000, 4000000, 9000000 / teamWallets.length, 3600000, 12000000, 14820000, 20384700],
+        [6000000, 8000000, 8000000, 4000000, 9600000 / teamWallets.length, 3840000, 12000000, 15390000, 21000000],
+        [6000000, 8000000, 8000000, 4000000, 10200000 / teamWallets.length, 4080000, 12000000, 15960000, 21000000],
+        [6000000, 8000000, 8000000, 4000000, 10800000 / teamWallets.length, 4320000, 12000000, 16530000, 21000000],
+        [6000000, 8000000, 8000000, 4000000, 11400000 / teamWallets.length, 4560000, 12000000, 17100000, 21000000],
+        [6000000, 8000000, 8000000, 4000000, 12000000 / teamWallets.length, 4800000, 12000000, 17670000, 21000000],
+        [6000000, 8000000, 8000000, 4000000, 12600000 / teamWallets.length, 5040000, 12000000, 18240000, 21000000],
+        [6000000, 8000000, 8000000, 4000000, 13200000 / teamWallets.length, 5280000, 12000000, 18810000, 21000000],
+        [6000000, 8000000, 8000000, 4000000, 13800000 / teamWallets.length, 5520000, 12000000, 19380000, 21000000],
+        [6000000, 8000000, 8000000, 4000000, 14400000 / teamWallets.length, 5760000, 12000000, 20000000, 21000000],
+        [6000000, 8000000, 8000000, 4000000, 15000000 / teamWallets.length, 6000000, 12000000, 20000000, 21000000],
+        [6000000, 8000000, 8000000, 4000000, 15000000 / teamWallets.length, 6000000, 12000000, 20000000, 21000000]
     ]
 
     // Not dependent on actual tests, just make sure test setup is correct
@@ -96,15 +102,14 @@ contract("CrodoToken", (accounts) => {
         snapshotId = snapshot.result
 
         dist = await DistributionContract.new(
-            seedWallet,
-            privSaleWallet,
-            strategicSaleWallet,
-            pubSaleWallet,
-            teamWallet,
-            advisorsWallet,
-            liquidityWallet,
-            strategicWallet,
-            communityWallet
+            [seedWallet],
+            [privSaleWallet],
+            [strategicSaleWallet],
+            [pubSaleWallet],
+            [advisorsWallet],
+            [liquidityWallet],
+            [strategicWallet],
+            [communityWallet]
         )
         // await dist.initAllRounds()
         token = await CrodoToken.new(dist.address)
@@ -140,16 +145,24 @@ contract("CrodoToken", (accounts) => {
     it("test the whole distribution", async () => {
         await timeMachine.advanceBlockAndSetTime(TGEDate + day)
         for (let i = 0; i < releasesTable.length; ++i) {
-            // await dist.triggerTokenSend()
             await dist.triggerTokenSend()
             for (let j = 0; j < releaseWallets.length; ++j) {
                 const wallet = releaseWallets[j]
                 const targetBalance = releasesTable[i][j]
 
-                assert.equal(
-                    Number(await token.balanceOf(wallet)),
-                    amountToLamports(targetBalance, crodoDecimals)
-                )
+                if (typeof wallet === "object") {
+                    for (let t = 0; t < wallet.length; ++t) {
+                        assert.equal(
+                            Number(await token.balanceOf(wallet[t])),
+                            amountToLamports(targetBalance, crodoDecimals)
+                        )
+                    }
+                } else {
+                    assert.equal(
+                        Number(await token.balanceOf(wallet)),
+                        amountToLamports(targetBalance, crodoDecimals)
+                    )
+                }
             }
             await timeMachine.advanceTimeAndBlock(month)
         }

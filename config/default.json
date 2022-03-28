@@ -17,6 +17,15 @@
             "privateKey": ""
         }
     },
+    "testnet-local": {
+        "blockchain": {
+            "rpc": "http://127.0.0.1:8545",
+            "networkId": "338"
+        },
+        "truffle": {
+            "privateKey": ""
+        }
+    },
     "mainnet": {
         "blockchain": {
             "rpc": "https://rpc-cronos.crypto.org/",
