@@ -89,7 +89,7 @@ abstract contract BaseLimitedSale is Ownable {
         address _participant,
         uint256 minBuyAllowed,
         uint256 maxBuyAllowed
-    ) external onlyOwner {
+    ) public onlyOwner {
         Participant storage participant = participants[_participant];
         participant.minBuyAllowed = minBuyAllowed;
         participant.maxBuyAllowed = maxBuyAllowed;
@@ -98,6 +98,20 @@ abstract contract BaseLimitedSale is Ownable {
 
         participantAddrs.push(_participant);
         emit ParticipantAdded(_participant);
+    }
+
+    function addParticipants(
+        address[] memory _participants,
+        uint256[] memory minBuyAllowed,
+        uint256[] memory maxBuyAllowed
+    ) public onlyOwner {
+        require(
+            (_participants.length == minBuyAllowed.length) && (_participants.length == maxBuyAllowed.length),
+            "Provided participant info arrays must all have the same length"
+        );
+        for (uint i = 0; i < _participants.length; ++i) {
+            addParticipant(_participants[i], minBuyAllowed[i], maxBuyAllowed[i]);
+        }
     }
 
     function removeParticipant(address _participant) external onlyOwner {
@@ -302,6 +316,24 @@ contract CrodoPrivateSale is BaseLimitedSale {
 }
 
 contract CrodoStrategicSale is BaseLimitedSale {
+    constructor(
+        address _crodoToken,
+        address _usdtAddress,
+        uint256 _USDTPerToken,
+        uint48 _initReleaseDate,
+        uint8 _totalReleases
+    )
+        BaseLimitedSale(
+            _crodoToken,
+            _usdtAddress,
+            _USDTPerToken,
+            _initReleaseDate,
+            _totalReleases
+        )
+    {}
+}
+
+contract CrodoPublicSale is BaseLimitedSale {
     constructor(
         address _crodoToken,
         address _usdtAddress,
